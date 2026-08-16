@@ -1,0 +1,38 @@
+services:
+  jarvis-dashboard:
+    build:
+      context: /ruta/a/tu/proyecto/jarvis-dashboard
+    container_name: jarvis-dashboard
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - JARVIS_USER=${JARVIS_USER:-jarvis}
+      - JARVIS_PASSWORD=${JARVIS_PASSWORD:-jarvis2026}
+      - JARVIS_SECRET=${JARVIS_SECRET:-cambia-este-secreto}
+      # Túnel Cloudflare con nombre (OPCIONAL): token del panel Zero Trust
+      - JARVIS_TUNNEL_TOKEN=${JARVIS_TUNNEL_TOKEN:-}
+      # Túnel Cloudflare con nombre: rellena con el ID tras crearlo (ej: 9f2b...)
+      - JARVIS_TUNNEL_ID=${JARVIS_TUNNEL_ID:-}
+      - JARVIS_PC_TTS_URL=${JARVIS_PC_TTS_URL:-http://192.168.1.100:5003/tts}
+      - JARVIS_CFG=1.5
+      - JARVIS_TEMP=0.8
+      - JARVIS_TOP_K=12
+      - JARVIS_SPEED=1.0
+      - FOOTBALL_API_TOKEN=${FOOTBALL_API_TOKEN:-}
+      - JARVIS_PROXY_URL=${JARVIS_PROXY_URL:-http://127.0.0.1:9000}
+    volumes:
+      # ⚠️ ADAPTA estas rutas a tu máquina (ver README sección 7)
+      # Socket de Docker → panel de contenedores SIN API key de Portainer
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Secretos de Hermes (.env del host) — solo lectura (DEEPSEEK, OPENROUTER...)
+      - /ruta/a/tu/.env:/data/hermes.env:ro
+      # Menú semanal + cronjobs (solo lectura)
+      - /ruta/a/tu/.hermes:/data/.hermes:ro
+      - /ruta/a/tu/cron:/data/cron:ro
+      # URL del túnel del proxy (opcional)
+      - /ruta/a/tu/tunnel_url.txt:/data/tunnel_url.txt:ro
+      # Credenciales del túnel Cloudflare con nombre (opcional)
+      - /ruta/a/tu/.cloudflared:/home/jarvis/.cloudflared:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

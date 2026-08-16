@@ -1,0 +1,51 @@
+# Entorno y secretos — NUNCA subir
+.env
+.env.*
+!.env.example
+auth.json
+tuya.json
+devices.json
+snapshot.json
+tinytuya.json
+*.pem
+*.key
+
+# Datos personales / voz
+voces/
+muestra_voz.wav
+ref_text.txt
+# Audios pre-generados: ya no se usan (la voz se genera al vuelo con Fish
+# Audio). Se ignoran por si quedan restos de instalaciones antiguas.
+app/static/saludos/
+app/static/ack/
+
+# Modelo local de palabra clave (Vosk, se descarga solo)
+models/
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Carpeta generada por deploy.bat (contiene el .env real)
+deploy-hosting/
+
+# Electron
+electron/node_modules/
+dist-electron/
+memoria/avisos.json
+
+# Motores TTS locales (XTTS/CosyVoice/F5): sustituidos por Fish Audio.
+# Se conservan en disco por si alguien los quiere, pero fuera del repo.
+tts-pc-server/
+
+# Audios de prueba
+PRUEBA-*.wav
+
+# Logs y temporales
+*.log
+*.zip
+tunnel_url.txt
+_tmp*
+amador_personalidad_para_ia.txt
+frases_fermin_lqsa.txt

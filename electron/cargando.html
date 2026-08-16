@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>J.A.R.V.I.S.</title>
+<style>
+  :root { --cian: #5eeaff; --tenue: #2e96be; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: radial-gradient(ellipse at center, #0b1420 0%, #050810 70%);
+    color: var(--cian);
+    font-family: "Segoe UI", system-ui, sans-serif;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 34px;
+    user-select: none;
+    overflow: hidden;
+  }
+
+  /* Reactor: tres anillos girando a distinto ritmo */
+  .reactor { position: relative; width: 190px; height: 190px; }
+  .anillo {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    border: 2px solid transparent;
+  }
+  .a1 {
+    border-top-color: var(--cian); border-right-color: var(--cian);
+    animation: giro 2.4s linear infinite;
+  }
+  .a2 {
+    inset: 24px;
+    border-bottom-color: var(--tenue); border-left-color: var(--tenue);
+    animation: giro 3.6s linear infinite reverse;
+  }
+  .a3 {
+    inset: 48px;
+    border-top-color: var(--cian); border-left-color: var(--cian);
+    opacity: .65;
+    animation: giro 1.8s linear infinite;
+  }
+  .nucleo {
+    position: absolute; inset: 72px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #eafcff 0%, var(--cian) 55%, transparent 78%);
+    animation: latido 2s ease-in-out infinite;
+  }
+  @keyframes giro { to { transform: rotate(360deg); } }
+  @keyframes latido {
+    0%, 100% { opacity: .55; transform: scale(.92); }
+    50%      { opacity: 1;   transform: scale(1.06); }
+  }
+
+  h1 {
+    font-size: 30px; font-weight: 300; letter-spacing: .34em;
+    text-shadow: 0 0 22px rgba(94, 234, 255, .55);
+  }
+  #estado {
+    font-size: 13px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--tenue); min-height: 1.2em; text-align: center;
+    padding: 0 30px;
+  }
+
+  /* Progreso: solo aparece durante la instalación inicial */
+  #progreso { width: min(460px, 74vw); display: none; }
+  #progreso.visible { display: block; }
+  .barra {
+    height: 3px; border-radius: 2px;
+    background: rgba(94, 234, 255, .13);
+    overflow: hidden;
+  }
+  .relleno {
+    height: 100%; width: 0;
+    background: linear-gradient(90deg, var(--tenue), var(--cian));
+    box-shadow: 0 0 12px rgba(94, 234, 255, .6);
+    transition: width .5s ease;
+  }
+  #detalle {
+    margin-top: 11px;
+    font-size: 10.5px; color: #2b5f7d;
+    font-family: Consolas, monospace;
+    text-align: center;
+    height: 1.3em; overflow: hidden;
+    white-space: nowrap; text-overflow: ellipsis;
+  }
+  .aviso {
+    position: absolute; bottom: 26px;
+    font-size: 11px; color: #24506a;
+    text-align: center; padding: 0 30px;
+  }
+
+  /* Respetar a quien tenga el sistema en "reducir movimiento" */
+  @media (prefers-reduced-motion: reduce) {
+    .a1, .a2, .a3, .nucleo { animation: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="reactor">
+    <div class="anillo a1"></div>
+    <div class="anillo a2"></div>
+    <div class="anillo a3"></div>
+    <div class="nucleo"></div>
+  </div>
+
+  <h1>J.A.R.V.I.S.</h1>
+  <div id="estado">Iniciando…</div>
+
+  <div id="progreso">
+    <div class="barra"><div class="relleno" id="relleno"></div></div>
+    <div id="detalle"></div>
+  </div>
+
+  <div class="aviso" id="aviso">El motor de voz tarda unos segundos en cargar</div>
+
+<script>
+  /* main.js llama a esto para ir contando por dónde va el arranque.
+     Recibe {texto, detalle, paso, total}; los campos que no vengan
+     se dejan como están (así el detalle puede refrescarse solo). */
+  window.jarvisEstado = (d) => {
+    if (typeof d === 'string') d = { texto: d };
+    if (!d) return;
+
+    if (d.texto) document.getElementById('estado').textContent = d.texto;
+    if (d.detalle) document.getElementById('detalle').textContent = d.detalle;
+
+    if (d.total) {
+      document.getElementById('progreso').classList.add('visible');
+      const pct = Math.round((d.paso / d.total) * 100);
+      document.getElementById('relleno').style.width = pct + '%';
+      document.getElementById('aviso').textContent =
+        'Instalación inicial (' + d.paso + ' de ' + d.total + '). ' +
+        'Solo ocurre la primera vez — no cierres la ventana.';
+    }
+  };
+</script>
+</body>
+</html>

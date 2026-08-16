@@ -1,0 +1,9 @@
+{
+  "ir_hub": "TU_IR_HUB",
+  "devices": {
+    "dormitorio": {"id": "TU_DEVICE_ID", "nombre": "Luz Dormitorio"},
+    "luces_salon": {"id": "TU_DEVICE_ID", "nombre": "Luces Salon"},
+    "tele": {"id": "TU_DEVICE_ID", "nombre": "Tele"},
+    "aire": {"id": "TU_DEVICE_ID", "nombre": "Aire acondicionado"}
+  }
+}

@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>JARVIS — Panel de Control</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/hud.css?v=orb1">
+</head>
+<body>
+  <div class="bg-base"></div>
+  <div class="sweep"></div>
+  <div id="scanlines"></div>
+  <div class="vignette"></div>
+
+  <!-- LOGIN -->
+  <div id="login">
+    <div class="box">
+      <h1>JARVIS</h1>
+      <p class="sub">Acceso al sistema</p>
+      <input id="lg-user" placeholder="USUARIO" autocomplete="username">
+      <input id="lg-pass" type="password" placeholder="CONTRASEÑA" autocomplete="current-password">
+      <button id="lg-btn">ENTRAR</button>
+      <div class="err" id="lg-err"></div>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud-ui" class="hidden">
+    <aside id="sidebar">
+      <div class="nav-brand" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7" opacity=".7"/><circle cx="12" cy="12" r="10" opacity=".4"/></svg>
+      </div>
+      <nav class="nav-list">
+        <button class="nav-btn active" data-go="nucleo" title="Núcleo">
+          <svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><circle cx="12" cy="12" r="2.5"/></svg>
+          Núcleo
+        </button>
+        <button class="nav-btn" data-go="sistema" title="Sistema">
+          <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 4v16"/></svg>
+          Sistema
+        </button>
+        <button class="nav-btn" data-go="spotify" title="Spotify">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 10c2.5-1 5.5-1 8 .4M8 13c2-.8 4.5-.8 6.5.3M8.5 16c1.4-.5 3.2-.5 4.6.2"/></svg>
+          Spotify
+        </button>
+        <button class="nav-btn" data-go="tiempo" title="Tiempo">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M4.2 6.2l1.4 1.4M18.4 16.4l1.4 1.4M3 12h2M19 12h2M4.2 17.8l1.4-1.4M18.4 7.6l1.4-1.4"/></svg>
+          Tiempo
+        </button>
+        <button class="nav-btn" data-go="cron" title="Tareas">
+          <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 12h8M8 15h5"/></svg>
+          Tareas
+        </button>
+        <button class="nav-btn" data-go="menu" title="Menú">
+          <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="3" rx="1"/><rect x="4" y="10.5" width="16" height="3" rx="1"/><rect x="4" y="16" width="16" height="3" rx="1"/></svg>
+          Menú
+        </button>
+      </nav>
+      <button class="cbtn nav-btn" id="btn-config" title="Ajustes">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.3.7.9 1.2 1.6 1.3H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="brand">JARVIS<small>Panel de control</small></div>
+        <p id="hdr-greet">Núcleo estable. Sistemas operativos.</p>
+        <div id="clock-mid"></div>
+      </header>
+
+      <div class="board">
+        <div class="col col-l">
+          <div class="panel" data-panel="nucleo" data-side="left">
+            <div class="ph"><h2>Núcleo</h2></div>
+            <div class="pbody">
+              <div class="row"><span>HERMES</span><span><span class="dot" id="d-core"></span><b id="v-core">—</b></span></div>
+              <div class="row"><span>CEREBRO</span><span id="v-cerebro">—</span></div>
+              <div class="row"><span>MÁQUINA</span><span id="v-maquina">este PC</span></div>
+              <div class="row"><span>MISIÓN</span><span id="v-mision">en espera</span></div>
+              <div class="row"><span>SALDO</span><span id="v-balance">—</span></div>
+              <div class="row"><span>PROXY</span><span id="v-proxy">—</span></div>
+              <div class="mini" id="v-proxy-tunnel" style="display:none;font-size:9.5px;opacity:.7"></div>
+              <div class="row"><span>TÚNEL</span><span id="v-tunnel" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</span></div>
+              <div class="row"><span>SPOTIFY</span><span id="v-spotify">—</span></div>
+              <div class="row"><span>RECIBO</span><span id="v-recibo">—</span></div>
+            </div>
+          </div>
+          <div class="panel" data-panel="sistema" data-side="left">
+            <div class="ph"><h2>Sistema</h2></div>
+            <div class="pbody">
+              <div class="row"><span>CPU</span><span id="v-cpu">—</span></div>
+              <div class="bar" id="bar-cpu"><i style="width:0%"></i></div>
+              <div class="row"><span>RAM</span><span id="v-ram">—</span></div>
+              <div class="bar" id="bar-ram"><i style="width:0%"></i></div>
+              <div class="row"><span>DISCO</span><span id="v-disk">—</span></div>
+              <div class="bar" id="bar-disk"><i style="width:0%"></i></div>
+              <div class="row"><span>UPTIME</span><span id="v-uptime">—</span></div>
+            </div>
+          </div>
+          <div class="panel" data-panel="spotify" data-side="left">
+            <div class="ph"><h2>Spotify</h2></div>
+            <div class="pbody"><div class="mini" id="v-spotify-panel">—</div></div>
+          </div>
+        </div>
+
+        <div class="stage" id="hud">
+          <div id="core-label">JARVIS</div>
+        </div>
+
+        <div class="col col-r">
+          <div class="panel" data-panel="tiempo" data-side="right">
+            <div class="ph"><h2>Tiempo</h2></div>
+            <div class="pbody"><div class="mini" id="v-weather">—</div></div>
+          </div>
+          <div class="panel" data-panel="cron" data-side="right">
+            <div class="ph"><h2>Tareas</h2></div>
+            <div class="pbody"><div class="mini" id="v-cron">—</div></div>
+          </div>
+          <div class="panel" data-panel="menu" data-side="right">
+            <div class="ph"><h2>Menú</h2></div>
+            <div class="pbody"><div class="mini" id="v-menu">—</div></div>
+          </div>
+          <div id="badge-nucleo" class="badge">
+            <div class="badge-ico">✓</div>
+            <div>
+              <strong>NÚCLEO ESTABLE</strong>
+              <small id="badge-txt">Comprobando sistemas…</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="quick">
+        <span class="q-lab">Comandos</span>
+        <button class="q-btn" data-cmd="estado del sistema"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="M8 15v-4M12 15V8M16 15v-7"/></svg>Estado</button>
+        <button class="q-btn" data-cmd="cómo está Hermes"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>Hermes</button>
+        <button class="q-btn" data-cmd="qué tiempo hace"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2"/></svg>Tiempo</button>
+        <button class="q-btn" data-cmd="qué hay de menú hoy"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/></svg>Menú</button>
+      </div>
+
+      <div id="log-shell">
+        <div id="log-grip" title="Arrastra hacia arriba para agrandar"></div>
+        <div id="log-title">Consola <button class="pbtn" id="log-copy" title="Copiar esta consola">⧉</button><button class="pbtn" id="log-copy-server" title="Copiar log del servidor">🖥</button><button class="pbtn" id="log-toggle" title="Plegar consola">−</button></div>
+        <div id="log"></div>
+      </div>
+      <div id="micstatus" class="hidden"></div>
+      <div id="chatbar">
+        <input id="chatinput" placeholder="Dale una orden a JARVIS…  (Enter envía · ESPACIO o micrófono para hablar)">
+        <button class="cbtn" id="btn-send" title="Enviar">➤</button>
+        <button class="cbtn" id="btn-mic" title="Hablar">🎤</button>
+        <button class="cbtn" id="btn-escucha" title="Modo escucha: di JARVIS">👂</button>
+        <button class="cbtn" id="btn-cam" title="Cámara">📷</button>
+        <button class="cbtn" id="btn-mute" title="Silenciar voz">🔊</button>
+      </div>
+    </div>
+
+    <nav id="tabbar">
+      <button class="tab" data-tab="chat" title="Consola"><span class="t-ic">▤</span><span>CHAT</span></button>
+      <button class="tab" data-tab="nucleo" title="Núcleo"><span class="t-ic">◈</span><span>NÚCLEO</span></button>
+      <button class="tab" data-tab="sistema" title="Sistema"><span class="t-ic">⚙</span><span>SIST</span></button>
+      <button class="tab" data-tab="spotify" title="Spotify"><span class="t-ic">♪</span><span>SPOT</span></button>
+      <button class="tab" data-tab="tiempo" title="Tiempo"><span class="t-ic">☀</span><span>TIEMPO</span></button>
+      <button class="tab" data-tab="cron" title="Tareas"><span class="t-ic">☰</span><span>TAREAS</span></button>
+      <button class="tab" data-tab="menu" title="Menú"><span class="t-ic">▣</span><span>MENÚ</span></button>
+    </nav>
+
+    <!-- Panel de configuración -->
+    <div id="config-overlay" class="hidden">
+      <div id="config-panel">
+        <div class="cfg-head">
+          <h2>Ajustes</h2>
+          <button class="pbtn" id="cfg-close" title="Cerrar">✕</button>
+        </div>
+        <div class="cfg-body">
+          <div class="cfg-sec hidden">
+            <input type="checkbox" id="cfg-grid">
+            <button class="cfg-btn" id="cfg-auto"></button>
+            <button class="cfg-btn" id="cfg-reset"></button>
+          </div>
+
+          <div class="cfg-sec">
+            <h3 class="cfg-sec-tit">Audio</h3>
+            <div class="clave-campo cfg-micro">
+              <label for="cfg-micro">Micrófono <small>· escucha y 🎤</small></label>
+              <select id="cfg-micro">
+                <option value="">Predeterminado del sistema</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="cfg-sec">
+            <h3 class="cfg-sec-tit">Cerebro</h3>
+            <div class="cfg-seg" id="cfg-cerebro">
+              <button type="button" data-val="auto" class="on">Auto</button>
+              <button type="button" data-val="hermes">Hermes</button>
+              <button type="button" data-val="deepseek">DeepSeek</button>
+            </div>
+            <p class="claves-intro">Auto enruta. Hermes = portátil. DeepSeek = este PC, sin archivos. Spotify no cambia.</p>
+          </div>
+
+          <div class="cfg-sec">
+            <h3 class="cfg-sec-tit">Personalidad</h3>
+            <div class="cfg-seg" id="cfg-persona"></div>
+            <p class="claves-intro">Cómo habla. La voz de Fish es otra cosa: Voces, más abajo.</p>
+          </div>
+
+          <div class="cfg-sec">
+            <h3 class="cfg-sec-tit" id="cfg-claves-btn">Claves y servicios</h3>
+            <div id="cfg-claves">
+              <p class="claves-intro">En blanco = no tocar. <b>-</b> borra el valor.</p>
+              <div id="claves-campos"></div>
+              <div class="cfg-sep"></div>
+              <div class="voces-sec">
+                <div class="voces-head">
+                  <span class="presets-tit">Voces</span>
+                  <button type="button" class="cfg-btn pequeno" id="voz-add-btn">+ Añadir voz</button>
+                </div>
+                <div id="presets-lista"></div>
+                <div id="voz-alta" class="voz-alta hidden">
+                  <p class="claves-intro">El nombre es lo que verás. El ID de Fish se guarda y no se muestra.</p>
+                  <input id="preset-nombre" placeholder="Nombre (ej. JARVIS grave)" autocomplete="off">
+                  <input id="preset-id" placeholder="Pega el ID de Fish Audio" autocomplete="off" spellcheck="false">
+                  <div class="voz-alta-btns">
+                    <button type="button" class="cfg-btn" id="preset-guardar">Añadir</button>
+                    <button type="button" class="cfg-btn" id="voz-alta-cancel">Cancelar</button>
+                  </div>
+                </div>
+              </div>
+              <div class="claves-acciones">
+                <button class="cfg-btn" id="claves-guardar">GUARDAR</button>
+                <button class="cfg-btn" id="claves-probar">PROBAR CEREBRO</button>
+              </div>
+              <div id="claves-msg"></div>
+              <p class="claves-ayuda">Cerebro: <b>openrouter.ai/keys</b>. Oído: al cambiar Whisper, reinicia JARVIS.</p>
+            </div>
+          </div>
+        </div>
+        <div class="cfg-foot">
+          <button class="cfg-btn" id="cfg-tutorial">REPETIR CONFIGURACIÓN INICIAL</button>
+          <button class="cfg-btn danger" id="cfg-logout">CERRAR SESIÓN</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Secuencia de arranque JARVIS -->
+  <div id="boot-overlay">
+    <div class="boot-stage">
+      <button id="unlock-btn" class="boot-rings">
+        <span class="ring r1"></span>
+        <span class="ring r2"></span>
+        <span class="ring r3"></span>
+        <span class="core">✦</span>
+        <span class="vb-ripple"></span>
+      </button>
+      <h1 id="boot-title">JARVIS</h1>
+      <p class="sub" id="boot-sub">Asistente personal</p>
+      <div class="boot-lines" id="boot-lines"></div>
+      <div class="boot-bar" id="boot-bar"><i id="boot-bar-fill"></i></div>
+      <div id="boot-ready" class="hidden">
+        <span class="ready-text">Activar</span>
+        <span class="ready-sub">Toca para despertar la voz</span>
+      </div>
+    </div>
+  </div>
+
+<script src="/static/hud-three.js?v=orb6"></script>
+<script src="/static/hud-wake.js?v=iron1"></script>
+<script src="/static/hud-chat.js?v=iron1"></script>
+<script>
+
+let speaking = false;
+
+/* ============================================================ paneles: mover + plegar + redimensionar (persistente) */
+const PANEL_KEY = 'jarvis_panels_v1';
+const GRID = 24; /* paso de la rejilla de alineación */
+let gridOn = localStorage.getItem('jarvis_grid_on') === '1';
+let panelState = {};
+try { panelState = JSON.parse(localStorage.getItem(PANEL_KEY) || '{}'); } catch (e) {}
+
+function savePanel(p) {
+  const s = {
+    x: parseInt(p.style.left) || 0,
+    y: parseInt(p.style.top) || 0,
+    collapsed: p.classList.contains('collapsed'),
+    m: narrow() ? 'm' : 'd' /* modo en que se guardó: móvil o escritorio */
+  };
+  /* solo persistir tamaño si el usuario lo redimensionó explícitamente */
+  if (p.dataset.resized) { s.w = p.offsetWidth; s.h = p.offsetHeight; }
+  panelState[p.dataset.panel] = s;
+  try { localStorage.setItem(PANEL_KEY, JSON.stringify(panelState)); } catch (e) {}
+}
+
+function clampPanel(p) {
+  /* 245px al pie: es lo que ocupa la barra de chat. El tope se calcula sobre
+     el borde INFERIOR del panel (por eso se resta su altura): si no, un panel
+     alto colocado en el límite asoma por debajo al encoger la ventana. */
+  const suelo = innerHeight - 245 - p.offsetHeight;
+  const maxY = narrow()
+    ? Math.max(suelo, document.getElementById('hud-ui').scrollHeight - p.offsetHeight - 8)
+    : suelo;
+  const x = Math.max(8, Math.min(innerWidth - p.offsetWidth - 8, parseInt(p.style.left) || 0));
+  /* Math.max(8, …) al final: en ventanas muy bajas el tope puede quedar por
+     encima del margen, y entonces manda el margen (mejor arriba que fuera). */
+  const y = Math.max(8, Math.min(maxY, parseInt(p.style.top) || 0));
+  p.style.left = x + 'px'; p.style.top = y + 'px';
+}
+
+/* pantallas estrechas (móvil): una sola columna a la izquierda */
+function narrow() { return window.matchMedia('(max-width: 900px)').matches; }
+
+/* Móvil: pestañas inferiores — un panel visible a la vez (solo <900px) */
+const TABS_KEY = 'jarvis_mobile_tab';
+function initMobileTabs() {
+  if (!narrow()) return;
+  const inp = $('chatinput');
+  if (inp) inp.placeholder = 'Dale una orden a JARVIS…';
+  const bar = $('tabbar');
+  const tabs = [...bar.querySelectorAll('.tab')];
+  let active = localStorage.getItem(TABS_KEY) || 'chat';
+  if (!tabs.some(t => t.dataset.tab === active)) active = 'chat';
+  const activate = tab => {
+    active = tab;
+    try { localStorage.setItem(TABS_KEY, tab); } catch (e) {}
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    document.querySelectorAll('#hud-ui .panel[data-panel]').forEach(p => {
+      p.classList.toggle('tab-active', p.dataset.panel === tab);
+      p.classList.remove('collapsed'); /* en móvil siempre expandido */
+    });
+    const shell = $('log-shell');
+    shell.classList.toggle('tab-active', tab === 'chat');
+    shell.classList.remove('collapsed');
+    if (tab === 'chat') logEl.scrollTop = logEl.scrollHeight;
+  };
+  tabs.forEach(t => t.addEventListener('click', () => activate(t.dataset.tab)));
+  window.switchMobileTab = activate; /* expuesto para el chat */
+  activate(active);
+}
+
+/* detectar cambio móvil ↔ escritorio y reordenar */
+let wasNarrow = narrow();
+let reencuadre = null;
+let anchoPrevio = innerWidth, altoPrevio = innerHeight;
+addEventListener('resize', () => {
+  const n = narrow();
+  if (n !== wasNarrow) {
+    wasNarrow = n;
+    if (n) initMobileTabs();
+  }
+});
+
+function makeDraggable(p) {
+  const ph = p.querySelector('.ph');
+  ph.addEventListener('pointerdown', e => {
+    if (e.target.closest('.pbtn')) return;
+    if (narrow()) return; /* móvil: navegación por pestañas, sin drag */
+    e.preventDefault();
+    try { ph.setPointerCapture(e.pointerId); } catch (err) {}
+    const r = p.getBoundingClientRect();
+    const ox = e.clientX - r.left, oy = e.clientY - r.top;
+    p.classList.add('dragging');
+    const move = ev => {
+      let x = ev.clientX - ox, y = ev.clientY - oy;
+      if (gridOn) { x = Math.round(x / GRID) * GRID; y = Math.round(y / GRID) * GRID; }
+      p.style.left = x + 'px'; p.style.top = y + 'px';
+      clampPanel(p);
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      p.classList.remove('dragging');
+      savePanel(p);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  });
+}
+
+function makeResizable(p) {
+  const rz = document.createElement('div');
+  rz.className = 'p-resize';
+  rz.title = 'Redimensionar';
+  p.appendChild(rz);
+  rz.addEventListener('pointerdown', e => {
+    if (narrow()) return; /* en móvil el ancho es fijo (acordeón) */
+    e.preventDefault(); e.stopPropagation();
+    const r = p.getBoundingClientRect();
+    const move = ev => {
+      const w = Math.max(250, ev.clientX - r.left);
+      const h = Math.max(110, ev.clientY - r.top);
+      p.style.width = w + 'px';
+      p.style.height = h + 'px';
+      const b = p.querySelector('.pbody');
+      if (b) b.style.maxHeight = 'none';
+      clampPanel(p);
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      p.dataset.resized = '1';
+      savePanel(p);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  });
+}
+
+function initPanels() {
+  /* Layout fijo del panel de control: sin drag ni coordenadas absolutas. */
+}
+
+/* Auto-organizar: re-apila por lado según el orden del HTML (1 columna en móvil) */
+function autoArrange() {}
+
+/* Restablecer: borra estado, vuelve al tamaño CSS y reordena por defecto */
+function resetLayout() {}
+
+/* ============================================================ consola: mover + redimensionar (persistente) */
+const LOG_KEY = 'jarvis_log_state';
+let logState = {};
+try { logState = JSON.parse(localStorage.getItem(LOG_KEY) || '{}'); } catch (e) {}
+
+function clampLog() {
+  const s = $('log-shell');
+  const w = s.offsetWidth, h = s.offsetHeight;
+  const maxY = innerHeight - 76 - h - 8; /* nunca tapar la chatbar */
+  s.style.left = Math.max(8, Math.min(innerWidth - w - 8, parseInt(s.style.left) || 16)) + 'px';
+  s.style.top = Math.max(8, Math.min(maxY, parseInt(s.style.top) || (innerHeight - 76 - h))) + 'px';
+}
+
+function saveLog() {
+  const s = $('log-shell');
+  logState = {
+    x: parseInt(s.style.left) || 16,
+    y: parseInt(s.style.top) || (innerHeight - 76 - s.offsetHeight),
+    w: s.offsetWidth, h: s.offsetHeight,
+    collapsed: s.classList.contains('collapsed')
+  };
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(logState)); } catch (e) {}
+}
+
+function applyLogH(h) {
+  const s = $('log-shell');
+  if (!s || s.classList.contains('collapsed')) return;
+  const max = Math.round(innerHeight * 0.62);
+  s.style.height = Math.max(110, Math.min(max, h)) + 'px';
+}
+function saveLogH() {
+  const s = $('log-shell');
+  if (!s) return;
+  logState.h = s.offsetHeight;
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(logState)); } catch (e) {}
+}
+function initLogShell() {
+  const s = $('log-shell');
+  const tg = $('log-toggle');
+  if (typeof logState.h === 'number') applyLogH(logState.h);
+  const grip = $('log-grip');
+  if (grip) {
+    grip.addEventListener('pointerdown', e => {
+      if (narrow() || s.classList.contains('collapsed')) return;
+      e.preventDefault();
+      try { grip.setPointerCapture(e.pointerId); } catch (err) {}
+      const startY = e.clientY;
+      const startH = s.offsetHeight;
+      const move = ev => applyLogH(startH + (startY - ev.clientY));
+      const up = () => {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+        saveLogH();
+      };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+    });
+  }
+  if (!tg) return;
+  tg.addEventListener('click', () => {
+    s.classList.toggle('collapsed');
+    tg.textContent = s.classList.contains('collapsed') ? '＋' : '−';
+    if (!s.classList.contains('collapsed') && logState.h) applyLogH(logState.h);
+  });
+}
+
+/* ============================================================ utilidades */
+const logEl = document.getElementById('log');
+function nombreHud(t) {
+  return String(t || '').replace(
+    /\b(?:garbis|garvis|yarbis|yarvis|jarbis|harvis|llarvis|llarbis|yavis)\b/gi,
+    'JARVIS'
+  );
+}
+function log(line, cls) {
+  const p = document.createElement('p');
+  if (cls) p.className = cls;
+  p.textContent = '> ' + nombreHud(line);
+  logEl.appendChild(p);
+  while (logEl.children.length > 24) logEl.removeChild(logEl.firstChild);
+  logEl.scrollTop = logEl.scrollHeight;
+  return p;
+}
+const $ = id => document.getElementById(id);
+
+/* ============================================================ copiar consola / log servidor */
+async function copyText(txt, okMsg) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(txt);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    log(okMsg + ' (' + txt.length + ' caracteres)', 'ok');
+  } catch (e) {
+    log('No se pudo copiar: ' + e.message, 'bad');
+  }
+}
+$('log-copy').addEventListener('click', () => {
+  copyText($('log').innerText || '', 'Consola copiada');
+});
+$('log-copy-server').addEventListener('click', async () => {
+  try {
+    const r = await apiJSON('/api/log', { method: 'GET' });
+    if (r && r.log) copyText(r.log, 'Log del servidor copiado');
+    else log('Log vacío' + (r?.error ? ': ' + r.error : ''), 'warn');
+  } catch (e) {
+    log('Error al obtener el log: ' + e.message, 'bad');
+  }
+});
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, opts);
+  if (r.status === 401) { showLogin(); throw new Error('No autorizado'); }
+  return r;
+}
+async function apiJSON(path, opts = {}) {
+  const r = await api(path, opts);
+  return r.json();
+}
+
+/* ============================================================ login */
+function showLogin() { $('login').classList.add('visible'); $('hud-ui').classList.add('hidden'); }
+async function doLogin() {
+  $('lg-err').textContent = '';
+  const r = await apiJSON('/api/login', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({user: $('lg-user').value, password: $('lg-pass').value})
+  }).catch(e => { $('lg-err').textContent = 'Error de acceso'; return null; });
+  if (r && r.ok) {
+    $('login').classList.remove('visible');
+    $('hud-ui').classList.remove('hidden');
+    boot();
+  } else {
+    $('lg-err').textContent = 'Credenciales incorrectas';
+  }
+}
+$('lg-btn').addEventListener('click', doLogin);
+$('lg-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+/* ============================================================ estado */
+let muted = false;
+let statusData = null;
+let booted = false;
+
+function setDot(id, cls) { const el = $(id); el.className = 'dot ' + cls; }
+
+/* ============================================================ docker: agrupar + ocultar */
+const DOCKER_OCULTOS_KEY = 'jarvis_docker_ocultos_v1';
+let dockerEditMode = false;
+function dockerOcultos(){
+  try { return JSON.parse(localStorage.getItem(DOCKER_OCULTOS_KEY) || '[]'); }
+  catch(e){ return []; }
+}
+function dockerOcultosSave(list){
+  try { localStorage.setItem(DOCKER_OCULTOS_KEY, JSON.stringify(list)); } catch(e){}
+}
+function dockerBase(nombre){
+  /* quita sufijos de docker-compose/replicas: _1, -2, .3 */
+  return nombre.replace(/[-_.]\d+$/, '');
+}
+function dockerProyecto(nombre){
+  /* prefijos de proyecto del nombre: serpientes-tunnel-1 -> [serpientes, serpientes-tunnel] */
+  const limpio = dockerBase(nombre);
+  const segs = limpio.split(/[-_]/);
+  const prefijos = [];
+  let acc = '';
+  segs.forEach(s => {
+    acc = acc ? acc + '-' + s : s;
+    prefijos.push(acc.toLowerCase());
+  });
+  return prefijos;
+}
+function dockerAgrupar(containers){
+  /* grupo = prefijo común más largo compartido por 2+ contenedores */
+  const count = {};
+  containers.forEach(c => dockerProyecto(c.name).forEach(p => count[p] = (count[p] || 0) + 1));
+  const gruposMap = {};
+  const sueltos = [];
+  containers.forEach(c => {
+    const prefijos = dockerProyecto(c.name);
+    let proy = null;
+    for (let i = prefijos.length - 1; i >= 0; i--) {
+      if (count[prefijos[i]] >= 2) { proy = prefijos[i]; break; }
+    }
+    if (proy) (gruposMap[proy] = gruposMap[proy] || []).push(c);
+    else sueltos.push(c);
+  });
+  const grupos = Object.keys(gruposMap).map(base => ({ base, items: gruposMap[base] }));
+  grupos.sort((a, b) => a.base.localeCompare(b.base));
+  sueltos.sort((a, b) => a.name.localeCompare(b.name));
+  return { grupos, sueltos };
+}
+function dockerEsc(n){
+  return String(n).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function dockerFilaHTML(c, edit){
+  const oculto = dockerOcultos().includes(c.name);
+  const btn = edit
+    ? `<button class="dkg-btn" data-nombre="${dockerEsc(c.name)}" title="${oculto ? 'Mostrar' : 'Ocultar'}">${oculto ? '👁' : '🙈'}</button>`
+    : '';
+  return `<div class="dkg-item ${oculto ? 'oculto' : ''}"><span class="${c.state === 'running' ? 'on' : 'off'}">●</span> <span>${dockerEsc(c.name)}</span> <span style="opacity:.6">${dockerEsc(c.status)}</span> ${btn}</div>`;
+}
+function dockerReRender(){
+  if (statusData) renderStatus(statusData);
+}
+function dockerToggle(nombre){
+  const list = dockerOcultos();
+  const i = list.indexOf(nombre);
+  if (i >= 0) list.splice(i, 1); else list.push(nombre);
+  dockerOcultosSave(list);
+  dockerReRender();
+}
+function dockerToggleGrupo(base){
+  /* oculta/muestra TODOS los contenedores de un grupo de una vez */
+  const containers = (statusData && statusData.docker && statusData.docker.containers) || [];
+  const { grupos } = dockerAgrupar(containers);
+  const g = grupos.find(x => x.base === base);
+  if (!g) return;
+  const ocultos = dockerOcultos();
+  const todosOcultos = g.items.every(c => ocultos.includes(c.name));
+  if (todosOcultos) {
+    /* mostrar grupo: quitar todos */
+    dockerOcultosSave(ocultos.filter(n => !g.items.some(c => c.name === n)));
+  } else {
+    /* ocultar grupo: añadir todos */
+    g.items.forEach(c => { if (!ocultos.includes(c.name)) ocultos.push(c.name); });
+    dockerOcultosSave(ocultos);
+  }
+  dockerReRender();
+}
+function toggleDockerEdit(){
+  dockerEditMode = !dockerEditMode;
+  const b = $('btn-docker-edit');
+  if (b) { b.style.opacity = dockerEditMode ? '1' : '.55'; b.style.boxShadow = dockerEditMode ? '0 0 10px rgba(0,212,255,.5)' : 'none'; }
+  dockerReRender();
+}
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.dkg-btn');
+  if (!btn) return;
+  if (btn.dataset.grupo) dockerToggleGrupo(btn.dataset.grupo);
+  else if (btn.dataset.nombre) dockerToggle(btn.dataset.nombre);
+});
+if ($('btn-docker-edit')) {
+  $('btn-docker-edit').style.opacity = '.55';
+  $('btn-docker-edit').addEventListener('click', toggleDockerEdit);
+}
+
+function renderStatus(d) {
+  statusData = d;
+  /* núcleo */
+  setDot('d-core', 'ok'); $('v-core').textContent = 'ONLINE';
+  const modo = d.cerebro_modo || 'auto';
+  if (modo === 'deepseek') {
+    $('v-cerebro').innerHTML = '<span class="warn">DeepSeek · forzado</span>';
+  } else if (modo === 'hermes' && d.cerebro === 'hermes') {
+    $('v-cerebro').innerHTML = '<span class="ok">Hermes · forzado</span>';
+    if (renderStatus._cerebro === 'apagado') log('Hermes responde.', 'ok');
+  } else if (d.cerebro === 'hermes') {
+    $('v-cerebro').innerHTML = '<span class="ok">Hermes</span>';
+    if (renderStatus._cerebro === 'apagado') log('Hermes responde.', 'ok');
+  } else if (d.cerebro === 'deepseek') {
+    $('v-cerebro').innerHTML = '<span class="warn">OpenRouter (reserva)</span>';
+  } else if (d.cerebro === 'apagado') {
+    $('v-cerebro').innerHTML = '<span class="bad">Hermes apagado</span>';
+    if (renderStatus._cerebro !== 'apagado') {
+      log('Hermes apagado. El cerebro no responde.', 'bad');
+      if (modo !== 'deepseek') {
+        speak('[calm] Hermes no responde en el portátil. La charla sigue aquí.');
+      }
+    }
+  }
+  renderStatus._cerebro = d.cerebro;
+  const h = new Date().getHours();
+  const saludo = h < 12 ? 'Buenos días' : h < 20 ? 'Buenas tardes' : 'Buenas noches';
+  const greet = $('hdr-greet');
+  const badge = $('badge-nucleo');
+  const btxt = $('badge-txt');
+  const btit = badge ? badge.querySelector('strong') : null;
+  if (modo === 'deepseek') {
+    if (greet) greet.textContent = saludo + ', señor. DeepSeek directo en este PC.';
+    if (badge) badge.classList.remove('bad');
+    if (btit) btit.textContent = 'NÚCLEO DEEPSEEK';
+    if (btxt) btxt.textContent = 'Charla aquí. Archivos y comandos, no.';
+  } else if (d.cerebro === 'hermes') {
+    if (greet) greet.textContent = saludo + ', señor. Núcleo estable. Sistemas operativos.';
+    if (badge) badge.classList.remove('bad');
+    if (btit) btit.textContent = modo === 'hermes' ? 'NÚCLEO HERMES' : 'NÚCLEO ESTABLE';
+    if (btxt) btxt.textContent = modo === 'hermes'
+      ? 'Todo el chat al portátil. Spotify sigue aquí.'
+      : 'Todos los sistemas operativos.';
+  } else if (d.cerebro === 'deepseek') {
+    if (greet) greet.textContent = saludo + ', señor. Reserva OpenRouter activa.';
+    if (badge) badge.classList.remove('bad');
+    if (btit) btit.textContent = 'NÚCLEO EN RESERVA';
+    if (btxt) btxt.textContent = 'Hermes no responde; OpenRouter cubre.';
+  } else {
+    if (greet) greet.textContent = saludo + ', señor. Hermes no responde.';
+    if (badge) badge.classList.add('bad');
+    if (btit) btit.textContent = 'NÚCLEO INESTABLE';
+    if (btxt) btxt.textContent = 'Arranca el gateway en el portátil.';
+  }
+  if (d.balance && d.balance.balance !== undefined) {
+    const b = d.balance.balance;
+    const cls = b < 0.5 ? 'bad' : b < 1 ? 'warn' : 'ok';
+    $('v-balance').innerHTML = `<span class="${cls}">$${b.toFixed(2)}</span>`;
+  } else $('v-balance').innerHTML = '<span class="bad">' + (d.balance?.error || '—') + '</span>';
+  if (d.proxy) {
+    $('v-proxy').innerHTML = d.proxy.up ? '<span class="ok">● VIVO</span>' : '<span class="bad">● CAÍDO</span>';
+    /* el túnel gratuito/rotatorio es del PROXY, no del dashboard: va etiquetado */
+    const pt = $('v-proxy-tunnel');
+    if (d.proxy.tunnel && d.proxy.tunnel !== d.dashboard_url) {
+      pt.textContent = 'túnel proxy: ' + d.proxy.tunnel.replace(/^https?:\/\//, '');
+      pt.style.display = '';
+    } else if (pt) { pt.style.display = 'none'; }
+  }
+  /* TÚNEL = el del dashboard (túnel nombrado Cloudflare, dominio fijo) */
+  if (d.dashboard_url) {
+    $('v-tunnel').innerHTML = '<span class="ok">● ' + d.dashboard_url.replace(/^https?:\/\//, '') + '</span>';
+  } else {
+    $('v-tunnel').textContent = (d.proxy && d.proxy.tunnel) ? d.proxy.tunnel : '—';
+  }
+  /* sistema */
+  if (d.system && d.system.cpu !== undefined) {
+    $('v-cpu').textContent = d.system.cpu + '%';
+    bar('bar-cpu', d.system.cpu, d.system.cpu > 85, d.system.cpu > 60);
+    $('v-ram').textContent = d.system.ram_used_gb + ' / ' + d.system.ram_total_gb + ' GB (' + d.system.ram_pct + '%)';
+    bar('bar-ram', d.system.ram_pct, d.system.ram_pct > 90, d.system.ram_pct > 75);
+    $('v-disk').textContent = d.system.disk_used_gb + ' / ' + d.system.disk_total_gb + ' GB (' + d.system.disk_pct + '%)';
+    bar('bar-disk', d.system.disk_pct, d.system.disk_pct > 90, d.system.disk_pct > 75);
+    $('v-uptime').textContent = d.system.uptime;
+  }
+  /* tiempo */
+  const w = d.weather;
+  if (w && w.temp !== undefined) {
+    const days = (w.days || []).map(day =>
+      `<span>${day.date.slice(5)} · ${day.tmin}°/${day.tmax}° · ${wmo(day.code)}</span>`
+    ).join('');
+    $('v-weather').innerHTML =
+      `<div class="wx-now"><div class="wx-temp">${w.temp}°</div><div class="wx-meta">${wmo(w.code)}<br>humedad ${w.humidity}% · viento ${w.wind} km/h</div></div><div class="wx-days">${days}</div>`;
+  } else $('v-weather').textContent = w?.error || '—';
+  tickSiCambia($('v-weather'), 'wx', (w && w.temp !== undefined) ? String(w.temp) : (w?.error || '—'));
+  /* cron */
+  const cr = $('v-cron');
+  if (d.cron?.available) {
+    cr.innerHTML = d.cron.jobs.map(j => {
+      const cls = j.last_status === 'ok' ? 'on' : (j.last_status === '-' ? '' : 'off');
+      return `<span class="${cls}">${j.enabled ? '●' : '○'}</span> ${j.name} <span style="opacity:.55">[${j.last_status}]</span>`;
+    }).join('<br>');
+  } else cr.textContent = d.cron?.message || '—';
+  /* menú */
+  const mn = $('v-menu');
+  if (d.menu?.available) {
+    mn.style.whiteSpace = 'pre-wrap';
+    mn.textContent = d.menu.content.slice(0, 900);
+  } else mn.textContent = 'No disponible';
+  const avisos = d.avisos || [];
+  const vistos = renderStatus._avisos || (renderStatus._avisos = {});
+  const ahora = Date.now();
+  for (const a of avisos) {
+    if (!a.id || vistos[a.id]) continue;
+    vistos[a.id] = true;
+    const t = a.texto || a.text || '';
+    if (!t) continue;
+    log(t, 'warn');
+    if (t.length < 80 && (!renderStatus._lastAvisoSpeak || ahora - renderStatus._lastAvisoSpeak > 600000)) {
+      renderStatus._lastAvisoSpeak = ahora;
+      speak('[calm] ' + t);
+    }
+  }
+}
+
+function bar(id, val, bad, warn) {
+  const el = $(id); const i = el.querySelector('i');
+  i.style.width = Math.min(val, 100) + '%';
+  el.className = 'bar' + (bad ? ' bad' : warn ? ' warn' : '');
+}
+
+/* ---------------- spotify ---------------- */
+let spotifyData = null;
+let spotifyMsg = null; /* mensaje temporal de error/info */
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtMs(ms) {
+  if (ms == null) return '0:00';
+  const t = Math.floor(ms / 1000);
+  return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+}
+async function renderSpotify() {
+  const el = $('v-spotify-panel');
+  if (!el || !booted) return;
+  /* preservar el buscador entre re-renders (si no, cada 10s se borra lo escrito) */
+  let qVal = '', qFocused = false;
+  const oldQ = document.getElementById('sp-q');
+  if (oldQ) { qVal = oldQ.value; qFocused = document.activeElement === oldQ; }
+  let s;
+  try {
+    const r = await fetch('/api/spotify', { credentials: 'same-origin' });
+    if (!r.ok) { el.innerHTML = '<span class="off">Spotify no disponible</span>'; return; }
+    s = await r.json();
+  } catch (e) { el.innerHTML = '<span class="off">Error de red</span>'; return; }
+  spotifyData = s;
+  /* fila resumen del panel NÚCLEO */
+  const nuc = $('v-spotify');
+  if (nuc) {
+    if (!s.available) nuc.innerHTML = '<span class="off">no auth</span>';
+    else if (s.playing) nuc.innerHTML = `<span class="ok">▶ ${esc(s.playing.name)}</span>`;
+    else nuc.innerHTML = '<span style="opacity:.6">—</span>';
+    tickSiCambia(nuc, 'sp', nuc.textContent);
+  }
+  if (!s.available) {
+    let html = '<span class="off">' + esc(s.message || 'No autenticado') + '</span>';
+    if (!s.client_id) {
+      html += '<div style="margin-top:8px;font-size:10px;opacity:.75">En Ajustes pega el Client ID de Spotify (developer.spotify.com). Redirect: http://127.0.0.1:8080/api/spotify/callback</div>';
+    } else {
+      html += '<div style="margin-top:8px"><a class="pbtn" href="/api/spotify/login">Conectar Spotify</a></div>';
+      html += '<div style="margin-top:6px;font-size:9.5px;opacity:.55">Hace falta Premium. Abre la app de Spotify en el PC o el móvil.</div>';
+    }
+    el.innerHTML = html;
+    return;
+  }
+  let html = '';
+  if (spotifyMsg) html += `<div class="sp-msg">⚠ ${esc(spotifyMsg)}</div>`;
+  if (s.playing) {
+    const p = s.playing;
+    const pct = p.duration_ms ? Math.min(100, Math.round((p.progress_ms || 0) / p.duration_ms * 100)) : 0;
+    html += `<div class="sp-now"><b>${esc(p.name)}</b><br><span style="opacity:.7">${esc(p.artists)} · ${esc(p.album)}</span>`;
+    html += `<div class="sp-prog"><i style="width:${pct}%"></i></div>`;
+    html += `<span style="font-size:9.5px;opacity:.6">${fmtMs(p.progress_ms)} / ${fmtMs(p.duration_ms)}</span></div>`;
+  } else {
+    html += '<span style="opacity:.6">Nada sonando — busca y dale a ▶</span>';
+  }
+  html += `<div class="sp-btns">
+    <button class="pbtn" data-sp="prev" title="Anterior">⏮</button>
+    <button class="pbtn sp-main" data-sp="playpause" title="Reproducir / Pausar">${s.playing && s.playing.is_playing ? '⏸' : '▶'}</button>
+    <button class="pbtn" data-sp="next" title="Siguiente">⏭</button>
+  </div>`;
+  html += `<div class="sp-search"><input id="sp-q" placeholder="Busca una canción…" /><button class="pbtn" id="sp-play-q" title="Reproducir búsqueda">▶</button></div>`;
+  if (s.devices && s.devices.length) {
+    html += '<div class="sp-dev"><span style="opacity:.7">DISP.:</span> ' + s.devices.map(d =>
+      `<button class="pbtn sp-d${d.active ? ' on' : ''}" data-sp="dev" data-id="${esc(d.id)}" title="Transferir a ${esc(d.name)}">${d.active ? '●' : '○'} ${esc(d.name)}</button>`
+    ).join(' ') + '</div>';
+  } else {
+    html += '<div style="margin-top:6px;font-size:9.5px;opacity:.55">Sin dispositivos activos — abre Spotify en algún dispositivo</div>';
+  }
+  el.innerHTML = html;
+  if (qVal) {
+    const nq = document.getElementById('sp-q');
+    if (nq) { nq.value = qVal; if (qFocused) nq.focus(); }
+  }
+}
+function spMsg(text) {
+  spotifyMsg = text;
+  setTimeout(() => { spotifyMsg = null; renderSpotify(); }, 5000);
+}
+function spAction(action, extra) {
+  const body = { action: action };
+  if (extra) Object.assign(body, extra);
+  fetch('/api/spotify', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body), credentials: 'same-origin',
+  }).then(r => r.json()).then(d => {
+    if (d && d.error) spMsg(d.error);
+    renderSpotify();
+  }).catch(() => { spMsg('Error de red'); renderSpotify(); });
+}
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-sp]');
+  if (!btn) return;
+  const sp = btn.dataset.sp;
+  if (sp === 'playpause') {
+    const playing = spotifyData && spotifyData.playing && spotifyData.playing.is_playing;
+    spAction(playing ? 'pause' : 'play');
+  } else if (sp === 'dev') spAction('transfer', { device_id: btn.dataset.id });
+  else spAction(sp);
+});
+document.addEventListener('click', e => {
+  if (e.target.id === 'sp-play-q') {
+    const q = $('sp-q');
+    if (q && q.value.trim()) spAction('play', { query: q.value.trim() });
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.target && e.target.id === 'sp-q' && e.key === 'Enter') {
+    const q = $('sp-q');
+    if (q && q.value.trim()) spAction('play', { query: q.value.trim() });
+  }
+});
+
+function wmo(c) {
+  const m = {0:'Despejado',1:'Mayormente despejado',2:'Parcialmente nublado',3:'Nublado',45:'Niebla',48:'Niebla',51:'Llovizna',53:'Llovizna',55:'Llovizna',61:'Lluvia ligera',63:'Lluvia',65:'Lluvia fuerte',66:'Lluvia helada',67:'Lluvia helada',71:'Nieve ligera',73:'Nieve',75:'Nieve fuerte',80:'Chubascos',81:'Chubascos',82:'Chubascos fuertes',95:'Tormenta',96:'Tormenta con granizo',99:'Tormenta con granizo'};
+  return m[c] || 'Desconocido';
+}
+
+/* ============================================================ voz */
+/* Saludo de bienvenida: 8 frases por franja horaria, elegidas al azar sin
+   repetir. Se sintetizan al vuelo con la voz de JARVIS al arrancar. */
+const SALUDOS = {
+  d: [
+    'Buenos días, señor. Un placer volver a servirle.',
+    'Bienvenido, señor. He tomado la libertad de dejarlo todo preparado.',
+    'Buenos días, señor. Diagnóstico limpio. Estoy listo cuando lo esté usted.',
+    'Señor. Buenos días. Protocolos activos. A su disposición.',
+    'Buenos días. Como siempre, un placer. ¿Por dónde empezamos?',
+    'Buenos días, señor. He verificado el núcleo. Puede proceder.',
+    'Señor, buenos días. Permítame ocuparme de lo que necesite.',
+    'Buenos días, señor. Diga la palabra y me pongo a ello.',
+  ],
+  t: [
+    'Buenas tardes, señor. JARVIS a su servicio. El sistema le espera.',
+    'Bienvenido de nuevo, señor. He dejado los sistemas listos.',
+    'Buenas tardes. Diagnóstico en orden. Un placer continuar a su lado.',
+    'Señor. Buenas tardes. Dígame, y me pongo a ello.',
+    'Buenas tardes, señor. Como de costumbre, a su disposición.',
+    'Buenas tardes. Núcleo estable. Puede proceder cuando guste.',
+    'Señor, buenas tardes. Permítame adelantarme a lo que necesite.',
+    'Buenas tardes, señor. Esperando sus órdenes.',
+  ],
+  n: [
+    'Buenas noches, señor. El laboratorio está en calma.',
+    'Bienvenido, señor. Una noche más. He dejado todo preparado.',
+    'Buenas noches. Diagnóstico limpio. Si vamos a trabajar, estoy listo.',
+    'Señor. Buenas noches. Protocolos en silencio, a la espera de su voz.',
+    'Buenas noches, señor. Un placer. Diga qué necesita y me ocupo.',
+    'Buenas noches. El núcleo espera. A su servicio.',
+    'Señor, buenas noches. Permítame velar por lo que haga falta.',
+    'Buenas noches, señor. Cuando quiera, empezamos.',
+  ]
+};
+let WELCOME_TEXT = '';
+let WELCOME_FRANJA = 'n';
+let WELCOME_IDX = 0;
+const SALUDOS_HIST_KEY = 'jarvis_saludos_hist_v2';
+function lsGet(key, def) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch (e) { return def; }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+}
+function elegirSaludo(franja) {
+  /* elige índice aleatorio evitando los 2 últimos usados en esa franja
+     (persistido en localStorage: vale entre recargas y sesiones) */
+  const hist = lsGet(SALUDOS_HIST_KEY, { d: [], t: [], n: [] });
+  const lista = SALUDOS[franja];
+  const prohibidos = hist[franja] || [];
+  let i, intentos = 0;
+  do { i = Math.floor(Math.random() * lista.length); intentos++; } while (prohibidos.includes(i) && intentos < 25);
+  hist[franja] = (prohibidos.concat(i)).slice(-2);
+  lsSet(SALUDOS_HIST_KEY, hist);
+  return i;
+}
+function welcomeText() {
+  const h = new Date().getHours();
+  const franja = h < 12 ? 'd' : h < 20 ? 't' : 'n';
+  WELCOME_FRANJA = franja;
+  WELCOME_IDX = elegirSaludo(franja);
+  return SALUDOS[franja][WELCOME_IDX];
+}
+const BOOT_LINES = [
+  'INICIANDO NÚCLEO PRINCIPAL…',
+  'CARGANDO MÓDULOS DE VOZ…',
+  'CONECTANDO CON H.E.R.M.E.S…',
+  'VERIFICANDO SISTEMAS EN LÍNEA…',
+  'TODOS LOS SISTEMAS OPERATIVOS ✓'
+];
+let welcomeAudio = null;
+
+function bootLine() {
+  if (bootStep >= BOOT_LINES.length) return;
+  const p = document.createElement('p');
+  p.textContent = '> ' + BOOT_LINES[bootStep];
+  p.classList.add('in');
+  bootEl.appendChild(p);
+  while (bootEl.children.length > 6) bootEl.removeChild(bootEl.firstChild);
+  bootStep++;
+  $('boot-bar-fill').style.width = Math.round((bootStep / BOOT_LINES.length) * 100) + '%';
+}
+
+function startBootSequence() {
+  const ov = $('boot-overlay');
+  ov.classList.remove('hidden', 'fade-out');
+  ov.onpointerdown = skipBoot;
+  bootEl = $('boot-lines'); bootEl.innerHTML = '';
+  bootStep = 0;
+  ttsFailed = false;
+  $('boot-bar-fill').style.width = '0%';
+  /* reset del estado "listo" (por si es un re-arranque tras logout) */
+  $('unlock-btn').classList.remove('ready', 'pulse');
+  $('boot-title').classList.remove('hidden');
+  $('boot-sub').classList.remove('hidden');
+  $('boot-lines').classList.remove('hidden');
+  $('boot-bar').classList.remove('hidden');
+  $('boot-ready').classList.add('hidden');
+  welcomeAudio = null;
+  WELCOME_TEXT = welcomeText();
+  apiJSON('/api/briefing').then(b => {
+    if (b && b.enabled && (b.text || '').trim()) WELCOME_TEXT = b.text.trim();
+  }).catch(() => {}).finally(() => {
+  api('/api/tts', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ text: WELCOME_TEXT })
+  })
+    .then(r => r.blob())
+    .then(blob => {
+      welcomeAudio = new Audio(URL.createObjectURL(blob));
+      welcomeAudio.onerror = () => {
+        ttsFailed = true; welcomeAudio = null;
+        if (bootStep >= BOOT_LINES.length) hideBoot();
+      };
+      if (bootStep >= BOOT_LINES.length) tryPlayWelcome();
+    })
+    .catch(() => {
+      /* sin voz no se bloquea el arranque: se entra al panel igual */
+      ttsFailed = true; welcomeAudio = null;
+      if (bootStep >= BOOT_LINES.length) hideBoot();
+    });
+  });
+  bootTimer = setInterval(() => {
+    bootLine();
+    if (bootStep >= BOOT_LINES.length) {
+      clearInterval(bootTimer);
+      setTimeout(finishBoot, 320);
+    }
+  }, 430);
+}
+
+function skipBoot() {
+  if (bootStep >= BOOT_LINES.length) return;
+  clearInterval(bootTimer);
+  while (bootStep < BOOT_LINES.length) bootLine();
+  finishBoot();
+}
+
+function finishBoot() {
+  while (bootStep < BOOT_LINES.length) bootLine();
+  log('JARVIS: ' + WELCOME_TEXT, 'ok');
+  if (welcomeAudio) { tryPlayWelcome(); return; }
+  if (ttsFailed) { hideBoot(); return; }
+  const p = document.createElement('p');
+  p.textContent = '> PREPARANDO VOZ…';
+  p.classList.add('in');
+  bootEl.appendChild(p);
+}
+
+function showVoiceReady() {
+  /* el círculo de carga se transforma en el botón pulsante (un solo círculo) */
+  $('unlock-btn').classList.add('ready');
+  $('boot-title').classList.add('hidden');
+  $('boot-sub').classList.add('hidden');
+  $('boot-lines').classList.add('hidden');
+  $('boot-bar').classList.add('hidden');
+  $('boot-ready').classList.remove('hidden');
+}
+
+function tryPlayWelcome() {
+  if (!welcomeAudio) return;
+  if (muted) { hideBoot(); return; }
+  const ov = $('boot-overlay');
+  ov.classList.remove('hidden', 'fade-out');
+  setSpeaking(true);
+  const a = welcomeAudio;
+  a.onended = () => { setSpeaking(false); };
+  a.onerror = () => { setSpeaking(false); };
+  const p = a.play();
+  if (p && p.catch) {
+    p.then(() => hideBoot()).catch(() => showVoiceReady());
+  } else {
+    hideBoot();
+  }
+}
+
+/* En la app de escritorio el audio se reproduce sin permiso previo. En
+   navegador hay que esperar a que el usuario toque algo, asi que se guarda
+   el audio y se ofrece el boton de desbloqueo. */
+function activateVoice() {
+  const a = pendingAudio || welcomeAudio;
+  pendingAudio = null; welcomeAudio = null;
+  hideBoot();
+  if (a) {
+    const p = a.play();
+    if (p && p.catch) p.catch(() => { setSpeaking(false); log('Audio bloqueado: toca la pantalla', 'warn'); });
+  }
+}
+
+function unlockAudio() {
+  document.removeEventListener('pointerdown', unlockAudio);
+  document.removeEventListener('keydown', unlockAudio);
+  activateVoice();
+}
+
+function hideBoot() {
+  const ov = $('boot-overlay');
+  ov.onpointerdown = null;
+  ov.classList.add('fade-out');
+  setTimeout(() => ov.classList.add('hidden'), 700);
+  activarEscucha();
+}
+
+$('btn-send').addEventListener('click', () => sendChat($('chatinput').value.trim()));
+$('unlock-btn').addEventListener('click', function () {
+  this.classList.add('pulse');
+  setTimeout(() => this.classList.remove('pulse'), 900);
+  activateVoice();
+});
+/* ---- panel de configuración ---- */
+function closeConfig() { $('config-overlay').classList.add('hidden'); }
+$('btn-config').addEventListener('click', () => {
+  $('cfg-grid').checked = gridOn;
+  $('config-overlay').classList.remove('hidden');
+  pintarMicros();
+  if (!clavesCargadas) cargarClaves();
+});
+$('cfg-micro').addEventListener('change', aplicarMicroElegido);
+function pintarCerebro(val) {
+  val = (val || 'auto').toLowerCase();
+  if (val !== 'hermes' && val !== 'deepseek') val = 'auto';
+  const box = $('cfg-cerebro');
+  if (!box) return;
+  box.querySelectorAll('button[data-val]').forEach(b => {
+    b.classList.toggle('on', b.dataset.val === val);
+  });
+}
+async function elegirCerebro(val) {
+  pintarCerebro(val);
+  try {
+    const r = await apiJSON('/api/ajustes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ CEREBRO: val }),
+    });
+    if (!r || !r.ok) {
+      log('No se pudo guardar el cerebro.', 'bad');
+      return;
+    }
+    const nombres = { auto: 'Auto', hermes: 'Hermes forzado', deepseek: 'DeepSeek forzado' };
+    log('Cerebro: ' + (nombres[val] || val) + '.', 'ok');
+    poll();
+  } catch (e) {
+    log('No se pudo guardar el cerebro.', 'bad');
+  }
+}
+$('cfg-cerebro').addEventListener('click', e => {
+  const b = e.target.closest('button[data-val]');
+  if (b) elegirCerebro(b.dataset.val);
+});
+let personaActiva = 'jarvis';
+function pintarPersona(val, lista) {
+  val = (val || 'jarvis').toLowerCase();
+  personaActiva = val;
+  const box = $('cfg-persona');
+  if (!box) return;
+  const ops = (lista && lista.length) ? lista : [
+    {slug: 'jarvis', nombre: 'JARVIS'},
+    {slug: 'fermin', nombre: 'Fermín'},
+    {slug: 'kratos', nombre: 'Kratos'},
+    {slug: 'tobey', nombre: 'Tobey'},
+    {slug: 'amador', nombre: 'Amador'},
+    {slug: 'saul', nombre: 'Saul'},
+    {slug: 'sergio', nombre: 'Sergio'},
+  ];
+  box.innerHTML = '';
+  for (const p of ops) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.val = p.slug;
+    b.textContent = p.nombre;
+    b.classList.toggle('on', p.slug === val);
+    box.appendChild(b);
+  }
+}
+async function elegirPersona(val) {
+  const box = $('cfg-persona');
+  const lista = Array.from(box.querySelectorAll('button[data-val]')).map(b => ({
+    slug: b.dataset.val, nombre: b.textContent
+  }));
+  pintarPersona(val, lista);
+  try {
+    const r = await apiJSON('/api/ajustes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ PERSONALIDAD: val }),
+    });
+    if (!r || !r.ok) {
+      log('No se pudo guardar la personalidad.', 'bad');
+      return;
+    }
+    const nom = (lista.find(p => p.slug === val) || {}).nombre || val;
+    log('Personalidad: ' + nom + '.', 'ok');
+  } catch (e) {
+    log('No se pudo guardar la personalidad.', 'bad');
+  }
+}
+$('cfg-persona').addEventListener('click', e => {
+  const b = e.target.closest('button[data-val]');
+  if (b) elegirPersona(b.dataset.val);
+});
+if (navigator.mediaDevices?.addEventListener) {
+  navigator.mediaDevices.addEventListener('devicechange', pintarMicros);
+}
+$('cfg-close').addEventListener('click', closeConfig);
+$('config-overlay').addEventListener('click', e => { if (e.target === $('config-overlay')) closeConfig(); });
+$('cfg-grid').addEventListener('change', e => {
+  gridOn = e.target.checked;
+  try { localStorage.setItem('jarvis_grid_on', gridOn ? '1' : '0'); } catch (err) {}
+  log(gridOn ? 'Rejilla de alineación activada' : 'Rejilla de alineación desactivada', 'ok');
+});
+$('cfg-auto').addEventListener('click', () => { autoArrange(); closeConfig(); });
+$('cfg-reset').addEventListener('click', () => { resetLayout(); closeConfig(); });
+$('cfg-logout').addEventListener('click', async () => {
+  closeConfig();
+  try { await api('/api/logout', { method: 'POST' }); } catch (e) {}
+  doLogout();
+});
+function doLogout() {
+  clearInterval(pollTimer);
+  clearInterval(bootTimer);
+  booted = false;
+  pendingAudio = null; welcomeAudio = null;
+  cortarVoz();
+  const ov = $('boot-overlay');
+  ov.classList.add('hidden'); ov.classList.remove('fade-out'); ov.onpointerdown = null;
+  logEl.innerHTML = '';
+  $('config-overlay').classList.add('hidden');
+  setMicStatus('');
+  setSpeaking(false);
+  if (typeof pararEscucha === 'function') pararEscucha();
+  $('hud-ui').classList.add('hidden');
+  $('login').classList.add('visible');
+}
+$('chatinput').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat($('chatinput').value.trim()); });
+
+/* ============================================================ micrófono → STT */
+let rec = null, chunks = [];
+let audioCtx = null, analyser = null, vadInterval = null, silenceTimer = null, maxTimer = null;
+let recording = false, micPressed = false;
+const MICRO_KEY = 'jarvis_micro_id';
+
+function microGuardado() {
+  try { return localStorage.getItem(MICRO_KEY) || ''; } catch (e) { return ''; }
+}
+
+function constraintsAudio(deviceId) {
+  const id = deviceId !== undefined ? deviceId : microGuardado();
+  const audio = { echoCancellation: true, noiseSuppression: true };
+  if (id) audio.deviceId = { exact: id };
+  return { audio };
+}
+
+async function abrirMicro() {
+  try {
+    return await navigator.mediaDevices.getUserMedia(constraintsAudio());
+  } catch (e) {
+    if (!microGuardado()) throw e;
+    log('Ese micrófono no está disponible, uso el predeterminado', 'warn');
+    try { localStorage.setItem(MICRO_KEY, ''); } catch (err) {}
+    const sel = $('cfg-micro');
+    if (sel) sel.value = '';
+    return await navigator.mediaDevices.getUserMedia({ audio: true });
+  }
+}
+
+function nombreMicro(stream) {
+  const pista = stream && stream.getAudioTracks()[0];
+  return (pista && pista.label) || 'predeterminado';
+}
+
+async function pintarMicros() {
+  const sel = $('cfg-micro');
+  if (!sel || !navigator.mediaDevices?.enumerateDevices) return;
+  try {
+    const yaHayNombres = (await navigator.mediaDevices.enumerateDevices())
+      .some(d => d.kind === 'audioinput' && d.label);
+    if (!yaHayNombres) {
+      const tmp = await navigator.mediaDevices.getUserMedia({ audio: true });
+      tmp.getTracks().forEach(t => t.stop());
+    }
+  } catch (e) {
+    sel.innerHTML = '<option value="">Sin permiso de micrófono</option>';
+    return;
+  }
+  const mics = (await navigator.mediaDevices.enumerateDevices())
+    .filter(d => d.kind === 'audioinput');
+  const actual = microGuardado();
+  sel.innerHTML = '';
+  const def = document.createElement('option');
+  def.value = '';
+  def.textContent = 'Predeterminado del sistema';
+  sel.appendChild(def);
+  for (const d of mics) {
+    const o = document.createElement('option');
+    o.value = d.deviceId;
+    o.textContent = d.label || ('Micro ' + d.deviceId.slice(0, 8));
+    sel.appendChild(o);
+  }
+  if (actual && [...sel.options].some(o => o.value === actual)) sel.value = actual;
+  else sel.value = '';
+}
+
+async function aplicarMicroElegido() {
+  const sel = $('cfg-micro');
+  const id = sel ? sel.value : '';
+  try { localStorage.setItem(MICRO_KEY, id); } catch (e) {}
+  const nombre = sel && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : 'predeterminado';
+  log('Micrófono: ' + nombre, 'ok');
+  const seguia = typeof modoEscucha !== 'undefined' && modoEscucha;
+  if (!seguia) return;
+  pararEscucha();
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  const ctx = new Ctx();
+  try { if (ctx.state === 'suspended') await ctx.resume(); } catch (e) {}
+  if (await iniciarEscucha(ctx)) {
+    log('Modo escucha reactivado con ' + nombre, 'ok');
+    pintarEscucha();
+    arrancarVu();
+  } else {
+    try { ctx.close(); } catch (e) {}
+  }
+}
+
+function startRec() {
+  if (recording) return;
+  cortarVoz();
+  if (!navigator.mediaDevices?.getUserMedia) { log('Micrófono no disponible (¿https/localhost?)', 'bad'); return; }
+  abrirMicro().then(stream => {
+    rec = new MediaRecorder(stream); chunks = [];
+    rec.ondataavailable = e => chunks.push(e.data);
+    rec.onstop = () => handleMicStop(stream);
+    rec.start();
+    recording = true;
+    $('btn-mic').classList.add('active');
+    setMicStatus('🎙 Escuchando…  suelta para enviar');
+    startVAD(stream);
+    maxTimer = setTimeout(() => { log('Límite de 30 segundos — enviando…', 'warn'); stopRec(); }, 30000);
+  }).catch(e => log('Micrófono denegado: ' + e.message, 'bad'));
+}
+
+function stopRec() {
+  if (rec && rec.state === 'recording') rec.stop();
+}
+
+async function handleMicStop(stream) {
+  stopVAD();
+  clearTimeout(maxTimer);
+  recording = false;
+  micPressed = false;
+  $('btn-mic').classList.remove('active');
+  stream.getTracks().forEach(t => t.stop());
+  const blob = new Blob(chunks, { type: 'audio/webm' });
+  setMicStatus('🧠 Pensando…');
+  playAck(); /* pulso visual mientras transcribe */
+  const fd = new FormData(); fd.append('audio', blob, 'voz.webm');
+  const vivo = log(fraseEnEllo(0), 'warn');
+  const r = await apiJSON('/api/voice-chat', { method: 'POST', body: fd }).catch(() => null);
+  setMicStatus('');
+  if (r && r.reply) {
+    cancelAck();
+    log('Tú: ' + (r.text || '…'), '');
+    vivo.className = 'ok';
+    vivo.textContent = '> JARVIS: ' + textoSinEmocion(r.reply);
+    $('chatinput').value = '';
+    if (r.audio_b64) {
+      playAudioB64(r.audio_b64, r.ctype);
+      if (r.timings) console.log('voice-chat timings', JSON.stringify(r.timings));
+    } else {
+      speak(r.reply);  // sin audio en la respuesta: síntesis por /api/tts
+    }
+  } else {
+    vivo.className = 'warn';
+    vivo.textContent = '> No se entendió: ' + (r?.error || 'silencio');
+  }
+}
+
+function playAudioB64(b64, ctype) {
+  const bin = atob((b64 || '').replace(/\s+/g, ''));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const blob = new Blob([bytes], { type: ctype || 'audio/wav' });
+  const a = new Audio(URL.createObjectURL(blob));
+  a.onended = () => setSpeaking(false);
+  a.onerror = () => { setSpeaking(false); log('Error de audio', 'bad'); };
+  playAudio(a);
+}
+
+function startVAD(stream) {
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const src = audioCtx.createMediaStreamSource(stream);
+    analyser = audioCtx.createAnalyser(); analyser.fftSize = 2048;
+    src.connect(analyser);
+    const data = new Uint8Array(analyser.fftSize);
+    vadInterval = setInterval(() => {
+      analyser.getByteTimeDomainData(data);
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) { const v = (data[i] - 128) / 128; sum += v * v; }
+      const rms = Math.sqrt(sum / data.length);
+      setMicStatus('🎙 ' + '█'.repeat(Math.min(10, Math.round(rms * 70))) + '  escuchando…');
+      if (rms < 0.02) {
+        if (!silenceTimer) silenceTimer = setTimeout(() => {
+          log('He dejado de oírle — enviando.', 'ok');
+          stopRec();
+        }, 500);
+      } else {
+        clearTimeout(silenceTimer); silenceTimer = null;
+      }
+    }, 250);
+  } catch (e) { console.log('VAD no disponible', e); }
+}
+
+function stopVAD() {
+  clearInterval(vadInterval); clearTimeout(silenceTimer);
+  vadInterval = null; silenceTimer = null;
+  if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; }
+  setMicStatus('');
+}
+
+function setMicStatus(t) {
+  const el = $('micstatus');
+  if (t) { el.textContent = nombreHud(t); el.classList.remove('hidden'); }
+  else el.classList.add('hidden');
+}
+
+$('btn-mic').addEventListener('pointerdown', e => { e.preventDefault(); micPressed = true; startRec(); });
+$('btn-mic').addEventListener('pointerup', () => { micPressed = false; stopRec(); });
+$('btn-mic').addEventListener('pointerleave', () => { if (micPressed) { micPressed = false; stopRec(); } });
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && e.target !== $('chatinput') && !e.repeat) startRec();
+});
+document.addEventListener('keyup', e => { if (e.code === 'Space') stopRec(); });
+window.addEventListener('blur', () => { if (recording) stopRec(); });
+
+
+$('btn-escucha').addEventListener('click', async () => {
+  if (modoEscucha) {
+    pararEscucha();
+    log('Modo escucha desactivado', '');
+    return;
+  }
+  await activarEscucha();
+});
+
+/* Al cerrar, soltar el microfono. */
+addEventListener('beforeunload', pararEscucha);
+
+/* ============================================================ cámara → visión */
+$('btn-cam').addEventListener('click', async () => {
+  if (!navigator.mediaDevices?.getUserMedia) { log('Cámara no disponible (¿https/localhost?)', 'bad'); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640 } });
+    const v = document.createElement('video');
+    v.srcObject = stream; await v.play();
+    await new Promise(r => setTimeout(r, 300));
+    const c = document.createElement('canvas'); c.width = 640; c.height = 480;
+    c.getContext('2d').drawImage(v, 0, 0, 640, 480);
+    stream.getTracks().forEach(t => t.stop());
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.8));
+    log('🔍 Analizando escena…', '');
+    const fd = new FormData(); fd.append('image', blob, 'cam.jpg');
+    fd.append('question', 'Describe qué ves. Responde en español, breve.');
+    const r = await apiJSON('/api/vision', { method: 'POST', body: fd }).catch(() => null);
+    if (r && r.description) { log('JARVIS (visión): ' + r.description, 'ok'); speak(r.description); }
+    else log('Visión falló: ' + (r?.error || 'sin respuesta'), 'bad');
+  } catch (e) { log('Cámara denegada: ' + e.message, 'bad'); }
+});
+
+/* mute */
+$('btn-mute').addEventListener('click', () => {
+  muted = !muted;
+  $('btn-mute').textContent = muted ? '🔇' : '🔊';
+  $('btn-mute').classList.toggle('active', muted);
+  if (muted) cortarVoz();
+  log(muted ? 'Voz silenciada' : 'Voz activada', 'warn');
+});
+
+/* ============================================================ ciclo */
+let pollTimer = null;
+async function poll() {
+  try {
+    const d = await apiJSON('/api/status');
+    renderStatus(d);
+  } catch (e) { /* 401 ya gestionado */ }
+}
+
+function clock() {
+  const now = new Date();
+  $('clock-mid').innerHTML = `
+    <div class="t">${now.toLocaleTimeString('es-ES')}</div>
+    <div class="d">${now.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+    <div class="l">ALCOY · ESPAÑA</div>`;
+}
+
+function initDash() {
+  document.querySelectorAll('#sidebar .nav-btn[data-go]').forEach(b => {
+    b.addEventListener('click', () => irPanel(b.dataset.go));
+  });
+  document.querySelectorAll('.q-btn[data-cmd]').forEach(b => {
+    b.addEventListener('click', () => sendChat(b.dataset.cmd));
+  });
+}
+function irPanel(id) {
+  document.querySelectorAll('#sidebar .nav-btn[data-go]').forEach(b => {
+    b.classList.toggle('active', b.dataset.go === id);
+  });
+  const p = document.querySelector('#hud-ui .panel[data-panel="' + id + '"]');
+  if (p) {
+    p.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    p.classList.add('flash');
+    setTimeout(() => p.classList.remove('flash'), 900);
+  }
+  if (narrow() && window.switchMobileTab) window.switchMobileTab(id);
+}
+
+function boot() {
+  if (booted) return;
+  booted = true;
+  initThree();   // three.js SOLO tras login/sesión: el login va siempre fluido
+  initPanels();
+  initLogShell();
+  initMobileTabs();
+  initDash();
+  log('A su servicio, señor.', 'ok');
+  const spLogin = new URLSearchParams(location.search).get('spotify');
+  if (spLogin === 'ok') log('Spotify conectado. Abre la app en el PC o el móvil y pide una canción.', 'ok');
+  if (spLogin === 'error') log('Spotify no se pudo conectar. Revisa el Client ID y el Redirect.', 'bad');
+  log('Conectando con H.E.R.M.E.S…', '');
+  poll();
+  pollTimer = setInterval(poll, 60000);
+  renderSpotify();
+  spotifyTimer = setInterval(renderSpotify, 10000);
+  clock(); setInterval(clock, 1000);
+  startBootSequence();
+}
+
+/* ============================================================ ajustes: claves */
+let clavesCargadas = false;
+
+function pintarClaves(ajustes) {
+  const cont = $('claves-campos');
+  cont.innerHTML = '';
+  const orden = [
+    'DEEPSEEK_API_KEY', 'DEEPSEEK_MODEL',
+    'DEEPSEEK_BASE_URL', 'OPENROUTER_API_KEY',
+    'HERMES_URL', 'HERMES_KEY', 'HERMES_FALLBACK',
+    'SPOTIFY_CLIENT_ID',
+    'TUYA_ACCESS_ID', 'TUYA_ACCESS_SECRET', 'TUYA_REGION', 'TUYA_DEVICE_ID',
+    'FISH_API_KEY',
+    'FISH_SPEED', 'FISH_EMOTION',
+    'JARVIS_WHISPER_MODEL',
+    'JARVIS_LAT',
+    'JARVIS_LON',
+  ];
+  const oidos = [
+    ['large-v3-turbo', 'Mejor oído (turbo) — reiniciar'],
+    ['small', 'Equilibrio (small) — reiniciar'],
+    ['medium', 'Más lento (medium) — reiniciar'],
+    ['base', 'Rápido y tosco (base) — reiniciar'],
+  ];
+  const emociones = [
+    ['calm', 'Calmado'], ['confident', 'Seguro'], ['happy', 'Alegre'],
+    ['empathetic', 'Empatico'], ['curious', 'Curioso'],
+    ['determined', 'Determinado'], ['relaxed', 'Relajado'],
+    ['angry', 'Enfadado'], ['', 'Automatica'],
+  ];
+  const vistos = new Set();
+
+  function pintarCampo(clave, d) {
+    const fila = document.createElement('div');
+    fila.className = 'clave-campo';
+    const lab = document.createElement('label');
+    lab.setAttribute('for', 'k-' + clave);
+    lab.textContent = d.etiqueta;
+    const marca = document.createElement('span');
+    marca.className = 'marca ' + (d.puesto ? 'ok' : 'no');
+    marca.textContent = d.puesto ? '●' : '○';
+    lab.appendChild(marca);
+
+    let inp;
+    if (clave === 'FISH_EMOTION') {
+      inp = document.createElement('select');
+      for (const [val, nom] of emociones) {
+        const o = document.createElement('option');
+        o.value = val;
+        o.textContent = nom;
+        if (((d.valor === '-' || d.valor === 'none') ? '' : (d.valor || 'calm')) === val) o.selected = true;
+        inp.appendChild(o);
+      }
+    } else if (clave === 'JARVIS_WHISPER_MODEL') {
+      inp = document.createElement('select');
+      const actual = d.valor || 'large-v3-turbo';
+      for (const [val, nom] of oidos) {
+        const o = document.createElement('option');
+        o.value = val;
+        o.textContent = nom;
+        if (actual === val) o.selected = true;
+        inp.appendChild(o);
+      }
+      inp.dataset.inicial = actual;
+    } else {
+      inp = document.createElement('input');
+      inp.autocomplete = 'off';
+      inp.spellcheck = false;
+      if (d.secreto) {
+        inp.type = d.puesto ? 'password' : 'text';
+        inp.placeholder = d.puesto ? d.valor : 'pegar y guardar';
+      } else if (clave === 'FISH_SPEED') {
+        inp.type = 'number';
+        inp.min = '0.5'; inp.max = '2'; inp.step = '0.1';
+        inp.value = d.valor || '1.0';
+      } else {
+        inp.type = 'text';
+        inp.value = d.valor || '';
+      }
+    }
+    inp.id = 'k-' + clave;
+    inp.dataset.clave = clave;
+    fila.append(lab, inp);
+    return fila;
+  }
+
+  for (const clave of orden) {
+    if (!ajustes[clave]) continue;
+    cont.appendChild(pintarCampo(clave, ajustes[clave]));
+    vistos.add(clave);
+  }
+  for (const [clave, d] of Object.entries(ajustes)) {
+    if (vistos.has(clave) || clave === 'FOOTBALL_API_TOKEN' || clave === 'FISH_VOICE_ID' || clave === 'PERSONALIDAD' || clave === 'CEREBRO' || clave === 'FISH_VOLUME') continue;
+    cont.appendChild(pintarCampo(clave, d));
+  }
+  const hid = document.createElement('input');
+  hid.type = 'hidden';
+  hid.id = 'k-FISH_VOICE_ID';
+  hid.dataset.clave = 'FISH_VOICE_ID';
+  hid.value = (ajustes.FISH_VOICE_ID && ajustes.FISH_VOICE_ID.valor) || '';
+  cont.appendChild(hid);
+}
+
+async function cargarClaves() {
+  const msg = $('claves-msg');
+  try {
+    const r = await apiJSON('/api/ajustes');
+    pintarClaves(r.ajustes);
+    pintarCerebro((r.ajustes.CEREBRO && r.ajustes.CEREBRO.valor) || 'auto');
+    pintarPersona((r.ajustes.PERSONALIDAD && r.ajustes.PERSONALIDAD.valor) || 'jarvis', r.personalidades);
+    pintarPresets();
+    clavesCargadas = true;
+    msg.className = ''; msg.textContent = '';
+  } catch (e) {
+    msg.className = 'mal';
+    msg.textContent = 'No se pudieron cargar los ajustes.';
+  }
+}
+
+/* Presets de voz: viven en el navegador (localStorage) porque son una
+   comodidad del usuario, no configuracion del servidor. */
+const PRESETS_KEY = 'jarvis_voz_presets_v1';
+
+function volDe(p) {
+  const n = Number(p && p.volumen);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(-20, Math.min(20, n));
+}
+function frasePrueba() {
+  if (personaActiva === 'fermin') return 'Telespeto, dígame.';
+  if (personaActiva === 'kratos') return 'Habla.';
+  if (personaActiva === 'tobey') return 'Hey. ¿Qué pasa?';
+  if (personaActiva === 'amador') return 'Venga, al lío.';
+  if (personaActiva === 'saul') return 'Qué pasa, bro.';
+  if (personaActiva === 'sergio') return 'Qué pasa, brother.';
+  return 'A su servicio, señor.';
+}
+function etiquetaDb(n) {
+  return (n > 0 ? '+' : '') + n + ' dB';
+}
+
+function pintarPresets() {
+  const cont = $('presets-lista');
+  cont.innerHTML = '';
+  const actual = (($('k-FISH_VOICE_ID') || {}).value || '').trim();
+  const lista = lsGet(PRESETS_KEY, []);
+  for (const [i, p] of lista.entries()) {
+    const vol = volDe(p);
+    const chip = document.createElement('div');
+    chip.className = 'voz-chip' + (p.vozId === actual ? ' activa' : '');
+    const nom = document.createElement('button');
+    nom.type = 'button';
+    nom.className = 'voz-nom';
+    nom.textContent = p.nombre;
+    nom.title = 'Usar ' + p.nombre;
+    nom.addEventListener('click', () => aplicarVoz(p));
+    const play = document.createElement('button');
+    play.type = 'button';
+    play.className = 'voz-play';
+    play.textContent = '▶';
+    play.title = 'Probar esta voz';
+    play.addEventListener('click', ev => {
+      ev.stopPropagation();
+      aplicarVoz(p).then(() => speak(frasePrueba()));
+    });
+    const x = document.createElement('span');
+    x.className = 'voz-x';
+    x.textContent = '×';
+    x.title = 'Quitar';
+    x.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const l = lsGet(PRESETS_KEY, []);
+      l.splice(i, 1);
+      lsSet(PRESETS_KEY, l);
+      pintarPresets();
+    });
+    const fila = document.createElement('label');
+    fila.className = 'voz-vol';
+    fila.title = 'Volumen de esta voz (Fish, en dB)';
+    const rng = document.createElement('input');
+    rng.type = 'range';
+    rng.min = '-20';
+    rng.max = '20';
+    rng.step = '1';
+    rng.value = String(vol);
+    const lab = document.createElement('b');
+    lab.textContent = etiquetaDb(vol);
+    rng.addEventListener('input', () => {
+      const v = Number(rng.value);
+      lab.textContent = etiquetaDb(v);
+      const l = lsGet(PRESETS_KEY, []);
+      if (!l[i]) return;
+      l[i].volumen = v;
+      lsSet(PRESETS_KEY, l);
+      if (l[i].vozId === actual) programarVolumen(v);
+    });
+    fila.append(rng, lab);
+    chip.append(nom, play, x, fila);
+    cont.appendChild(chip);
+  }
+}
+
+let volTimer = null;
+function programarVolumen(v) {
+  clearTimeout(volTimer);
+  volTimer = setTimeout(() => {
+    apiJSON('/api/ajustes', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ FISH_VOLUME: String(v) }),
+    }).catch(() => {});
+  }, 250);
+}
+
+async function aplicarVoz(p) {
+  const hid = $('k-FISH_VOICE_ID');
+  if (hid) hid.value = p.vozId;
+  const guardada = lsGet(PRESETS_KEY, []).find(x => x.vozId === p.vozId) || p;
+  pintarPresets();
+  const msg = $('claves-msg');
+  msg.className = 'esperando';
+  msg.textContent = 'Cambiando a «' + p.nombre + '»…';
+  try {
+    const r = await apiJSON('/api/ajustes', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        FISH_VOICE_ID: p.vozId,
+        FISH_VOLUME: String(volDe(guardada))
+      })
+    });
+    if (r && r.ok) {
+      msg.className = 'ok';
+      msg.textContent = 'Voz «' + p.nombre + '» activa.';
+    } else {
+      msg.className = 'mal';
+      msg.textContent = 'No se pudo aplicar la voz.';
+    }
+  } catch (e) {
+    msg.className = 'mal';
+    msg.textContent = 'Error al aplicar la voz.';
+  }
+}
+
+$('voz-add-btn').addEventListener('click', () => {
+  $('voz-alta').classList.remove('hidden');
+  $('preset-nombre').focus();
+});
+$('voz-alta-cancel').addEventListener('click', () => {
+  $('voz-alta').classList.add('hidden');
+  $('preset-nombre').value = '';
+  $('preset-id').value = '';
+});
+$('preset-guardar').addEventListener('click', () => altaVoz());
+$('preset-nombre').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('preset-id').focus(); } });
+$('preset-id').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); altaVoz(); } });
+
+function altaVoz() {
+  const nombre = $('preset-nombre').value.trim();
+  const vozId = $('preset-id').value.trim();
+  const msg = $('claves-msg');
+  if (!nombre) {
+    msg.className = 'mal';
+    msg.textContent = 'Ponle un nombre a la voz.';
+    $('preset-nombre').focus();
+    return;
+  }
+  if (!vozId) {
+    msg.className = 'mal';
+    msg.textContent = 'Pega el ID de Fish Audio.';
+    $('preset-id').focus();
+    return;
+  }
+  const l = lsGet(PRESETS_KEY, []);
+  if (l.some(p => p.nombre.toLowerCase() === nombre.toLowerCase())) {
+    msg.className = 'mal';
+    msg.textContent = 'Ya hay una voz con ese nombre.';
+    return;
+  }
+  l.push({ nombre, vozId, velocidad: '1.0', volumen: 0 });
+  lsSet(PRESETS_KEY, l);
+  $('preset-nombre').value = '';
+  $('preset-id').value = '';
+  $('voz-alta').classList.add('hidden');
+  pintarPresets();
+  aplicarVoz({ nombre, vozId, volumen: 0 });
+}
+
+$('cfg-claves-btn').addEventListener('click', () => {
+  if (!clavesCargadas) cargarClaves();
+});
+
+$('claves-guardar').addEventListener('click', async () => {
+  const msg = $('claves-msg');
+  const datos = {};
+  document.querySelectorAll('#claves-campos input, #claves-campos select').forEach(i => {
+    let v = i.value.trim();
+    if (i.dataset.clave === 'FISH_SPEED' && v) {
+      const n = parseFloat(v.replace(',', '.'));
+      if (Number.isNaN(n)) return;
+      v = String(Math.max(0.5, Math.min(2, n)));
+    }
+    if (i.dataset.clave === 'FISH_EMOTION') {
+      datos[i.dataset.clave] = v || '-';
+      return;
+    }
+    if (i.dataset.clave === 'JARVIS_WHISPER_MODEL' && v === i.dataset.inicial) return;
+    if (v) datos[i.dataset.clave] = v;
+  });
+  if (!Object.keys(datos).length) {
+    msg.className = 'esperando';
+    msg.textContent = 'No has cambiado nada.';
+    return;
+  }
+  msg.className = 'esperando';
+  msg.textContent = 'Guardando…';
+  try {
+    const r = await apiJSON('/api/ajustes', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(datos)
+    });
+    if (r && r.ok) {
+      msg.className = 'ok';
+      msg.textContent = r.reinicio_oido
+        ? 'Guardado. Reinicia JARVIS para aplicar el oído.'
+        : 'Guardado. Ya está activo, no hace falta reiniciar.';
+      document.querySelectorAll('#claves-campos input[type=password]')
+        .forEach(i => { i.value = ''; });
+      clavesCargadas = false;
+      cargarClaves();
+    } else {
+      msg.className = 'mal';
+      msg.textContent = 'No se pudo guardar.';
+    }
+  } catch (e) {
+    msg.className = 'mal';
+    msg.textContent = 'Error al guardar: ' + e.message;
+  }
+});
+
+$('claves-probar').addEventListener('click', async () => {
+  const msg = $('claves-msg');
+  msg.className = 'esperando';
+  msg.textContent = 'Probando el cerebro…';
+  try {
+    const r = await apiJSON('/api/ajustes/probar', { method: 'POST' });
+    if (r && r.ok) {
+      msg.className = 'ok';
+      msg.textContent = '✓ Responde correctamente (' + r.modelo + ').';
+    } else {
+      msg.className = 'mal';
+      msg.textContent = '✗ ' + (r.error || 'No responde');
+    }
+  } catch (e) {
+    msg.className = 'mal';
+    msg.textContent = '✗ ' + e.message;
+  }
+});
+
+/* repetir el tutorial (solo en la app de escritorio) */
+$('cfg-tutorial').addEventListener('click', async () => {
+  const msg = $('claves-msg');
+  if (!confirm('¿Repetir la configuración inicial?\n\n' +
+               'El tutorial saldrá la próxima vez que abras JARVIS. ' +
+               'Tus claves no se borran.')) return;
+  try {
+    const r = await apiJSON('/api/ajustes/repetir-tutorial', { method: 'POST' });
+    $('cfg-claves').classList.remove('hidden');
+    if (r && r.ok) {
+      msg.className = 'ok';
+      msg.textContent = 'Hecho. Cierra y vuelve a abrir JARVIS para ver el tutorial.';
+    } else {
+      msg.className = 'mal';
+      msg.textContent = (r && r.error) || 'No se pudo.';
+    }
+  } catch (e) {
+    msg.className = 'mal';
+    msg.textContent = 'Error: ' + e.message;
+  }
+});
+
+/* arranque: comprobar sesión */
+(async () => {
+  try {
+    const r = await apiJSON('/api/ping');
+    enKiosco = !!(r && r.kiosk);
+    if (enKiosco) $('cfg-logout').classList.add('hidden');
+    if (!r || !r.escritorio) $('cfg-tutorial').classList.add('hidden');
+    $('login').classList.remove('visible');
+    $('hud-ui').classList.remove('hidden');
+    boot();
+  } catch (e) { showLogin(); }
+})();
+</script>
+</body>
+</html>

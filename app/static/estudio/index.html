@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estudio de Voz TTS · JARVIS</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#111923; --panel2:#0d141d; --border:#1e2b3d;
+    --text:#dbe7f5; --muted:#7e93ad; --accent:#00d4ff; --accent2:#0a2a38;
+    --green:#2ecc71; --red:#e74c3c; --amber:#f1c40f;
+    --radius:14px; --shadow:0 8px 30px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 600px at 80% -10%, #0e2233 0%, var(--bg) 55%);
+    color:var(--text); font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    min-height:100vh; padding:22px;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  /* ---------- cabecera ---------- */
+  header{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;
+    background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--border);border-radius:var(--radius);padding:16px 22px;box-shadow:var(--shadow);
+  }
+  .logo{display:flex;align-items:center;gap:12px}
+  .logo .icon{font-size:30px}
+  .logo h1{font-size:19px;letter-spacing:.5px;font-weight:700}
+  .logo small{display:block;color:var(--muted);font-size:12px;font-weight:400;margin-top:2px}
+  .status{display:flex;gap:14px;flex-wrap:wrap}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--muted);margin-right:6px;vertical-align:middle}
+  .dot.on{background:var(--green);box-shadow:0 0 8px var(--green)}
+  .dot.off{background:var(--red)}
+  .status span{font-size:13px;color:var(--muted)}
+  /* ---------- layout ---------- */
+  .grid{display:grid;grid-template-columns:1.25fr .9fr;gap:18px;margin-top:18px}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+  .card{
+    background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);
+  }
+  .card h2{font-size:15px;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  /* ---------- selector de voces ---------- */
+  .voces{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:#0a1018;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:14px;
+  }
+  .voces label{font-size:13px;color:var(--muted);white-space:nowrap;font-weight:700}
+  .voces select{
+    flex:1;min-width:180px;background:#0d141d;color:var(--text);border:1px solid var(--border);
+    border-radius:8px;padding:9px 10px;font-size:14px;font-family:inherit;outline:none;
+  }
+  .voces select:focus{border-color:var(--accent)}
+  .voces .btn{padding:9px 13px;font-size:13px}
+  .btn-danger{border-color:rgba(231,76,60,.5);color:#ff8f84}
+  .btn-danger:hover{border-color:var(--red);color:var(--red)}
+  .vozstatus{font-size:12px;color:var(--muted);margin-top:8px;min-height:16px}
+  /* ---------- textarea ---------- */
+  textarea{
+    width:100%;min-height:150px;resize:vertical;background:#0a1018;color:var(--text);
+    border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:15px;line-height:1.5;
+    font-family:inherit;outline:none;transition:border-color .15s;
+  }
+  textarea:focus{border-color:var(--accent)}
+  .counter{text-align:right;font-size:12px;color:var(--muted);margin-top:5px}
+  /* ---------- modelos ---------- */
+  .models{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+  @media(max-width:560px){.models{grid-template-columns:1fr}}
+  .model{
+    position:relative;cursor:pointer;border:1px solid var(--border);border-radius:10px;padding:12px 10px;
+    background:#0a1018;transition:border-color .15s, box-shadow .15s;
+  }
+  .model:hover{border-color:#2a3d55}
+  .model input{position:absolute;opacity:0}
+  .model .mname{font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px}
+  .model .mdesc{font-size:11.5px;color:var(--muted);margin-top:4px}
+  .model .pstat{font-size:10.5px;margin-top:6px}
+  .model.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset, 0 0 14px rgba(0,212,255,.15)}
+  /* ---------- velocidad ---------- */
+  .speedrow{display:flex;align-items:center;gap:12px;margin:6px 0 16px}
+  .speedrow label{font-size:13px;color:var(--muted);white-space:nowrap}
+  input[type=range]{flex:1;accent-color:var(--accent)}
+  .speedval{font-size:14px;font-weight:700;color:var(--accent);min-width:44px;text-align:right}
+  /* ---------- botones ---------- */
+  .btn{
+    border:none;cursor:pointer;border-radius:10px;padding:12px 18px;font-size:14.5px;font-weight:700;
+    font-family:inherit;transition:transform .1s, filter .15s, opacity .2s;color:#04121a;
+  }
+  .btn:active{transform:scale(.97)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn-primary{background:linear-gradient(180deg,#19e0ff,var(--accent));width:100%}
+  .btn-primary:hover:not(:disabled){filter:brightness(1.12)}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-small{padding:9px 14px;font-size:13px}
+  /* ---------- player ---------- */
+  .result{margin-top:16px;display:none}
+  .result.show{display:block}
+  .player{display:flex;align-items:center;gap:12px;background:#0a1018;border:1px solid var(--border);border-radius:10px;padding:12px;flex-wrap:wrap}
+  audio{flex:1;min-width:220px;height:40px}
+  .download{color:var(--accent);text-decoration:none;font-size:13px;font-weight:700;white-space:nowrap}
+  .download:hover{text-decoration:underline}
+  .geninfo{font-size:12px;color:var(--muted);margin-top:8px}
+  /* ---------- estados ---------- */
+  .msg{display:none;margin-top:12px;padding:10px 13px;border-radius:10px;font-size:13.5px;line-height:1.45}
+  .msg.show{display:block}
+  .msg.err{background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.4);color:#ffb3aa}
+  .msg.ok{background:rgba(46,204,113,.10);border:1px solid rgba(46,204,113,.4);color:#a8eec2}
+  .msg.wait{background:rgba(241,196,15,.08);border:1px solid rgba(241,196,15,.35);color:#f5d76e}
+  .spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(241,196,15,.3);border-top-color:var(--amber);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* ---------- referencia ---------- */
+  .refinfo{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px}
+  .refinfo b{color:var(--text)}
+  .reftext{min-height:110px}
+  .filebtn{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+  input[type=file]{font-size:12.5px;color:var(--muted);max-width:220px}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.55}
+  .sep{border:none;border-top:1px solid var(--border);margin:16px 0}
+  footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
+  /* ---------- modal nueva voz ---------- */
+  .modal{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);
+    z-index:50;align-items:center;justify-content:center;padding:20px;
+  }
+  .modal.show{display:flex}
+  .modal-card{
+    width:100%;max-width:480px;background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);
+  }
+  .modal-card h3{font-size:16px;color:var(--accent);margin-bottom:16px}
+  .modal-card label{display:block;font-size:12.5px;color:var(--muted);margin:12px 0 6px;font-weight:600}
+  .modal-card input[type=text], .modal-card textarea{
+    width:100%;background:#0a1018;color:var(--text);border:1px solid var(--border);
+    border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;
+  }
+  .modal-card textarea{min-height:90px;resize:vertical}
+  .modal-card input:focus, .modal-card textarea:focus{border-color:var(--accent)}
+  .modal-card input[type=file]{max-width:100%;margin-top:6px}
+  .modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+  .modal-btns .btn{width:auto}
+  .modal-btns .btn-primary{width:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">
+      <span class="icon">🎙️</span>
+      <div>
+        <h1>ESTUDIO DE VOZ TTS</h1>
+        <small>CosyVoice 3 · F5-TTS · Álvaro — voces clonadas de tu PC</small>
+      </div>
+    </div>
+    <div class="status">
+      <span><span class="dot" id="s-cv3"></span>CosyVoice 3</span>
+      <span><span class="dot" id="s-f5"></span>F5-TTS</span>
+      <span><span class="dot" id="s-alvaro"></span>Álvaro</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- ============ GENERAR ============ -->
+    <section class="card">
+      <h2>🎧 Generar audio</h2>
+
+      <textarea id="txt" maxlength="3000" placeholder="Escribe aquí el texto que quieres que hable JARVIS con tu voz..."></textarea>
+      <div class="counter"><span id="cnt">0</span>/3000</div>
+
+      <div class="models" id="models">
+        <label class="model selected">
+          <input type="radio" name="model" value="cv3" checked>
+          <div class="mname">🔷 CosyVoice 3</div>
+          <div class="mdesc">El más rápido y natural (tier 1)</div>
+          <div class="pstat"><span class="dot" id="p-cv3"></span><span id="pt-cv3">comprobando…</span></div>
+        </label>
+        <label class="model">
+          <input type="radio" name="model" value="f5">
+          <div class="mname">🎚️ F5-TTS</div>
+          <div class="mdesc">Voz clonada, más pausada</div>
+          <div class="pstat"><span class="dot" id="p-f5"></span><span id="pt-f5">comprobando…</span></div>
+        </label>
+        <label class="model">
+          <input type="radio" name="model" value="alvaro">
+          <div class="mname">🤖 Álvaro (Edge)</div>
+          <div class="mdesc">Voz de respaldo, sin GPU</div>
+          <div class="pstat"><span class="dot" id="p-alvaro"></span><span id="pt-alvaro">comprobando…</span></div>
+        </label>
+      </div>
+
+      <div class="speedrow">
+        <label for="speed">Velocidad</label>
+        <input type="range" id="speed" min="0.6" max="1.6" step="0.05" value="1.0">
+        <span class="speedval" id="speedval">1.00×</span>
+      </div>
+
+      <button class="btn btn-primary" id="btn-gen">▶ Generar</button>
+
+      <div class="msg" id="msg"></div>
+
+      <div class="result" id="result">
+        <div class="player">
+          <audio id="player" controls></audio>
+          <a class="download" id="dl" download="voz_jarvis.wav">⬇ Descargar</a>
+        </div>
+        <div class="geninfo" id="geninfo"></div>
+      </div>
+    </section>
+
+    <!-- ============ VOCES + REFERENCIA ============ -->
+    <section class="card">
+      <h2>🗣️ Voces y referencia</h2>
+
+      <div class="voces">
+        <label>🎛 Voz:</label>
+        <select id="vozsel" title="Voz activa para CosyVoice 3"><option>cargando…</option></select>
+        <button class="btn btn-ghost btn-small" id="btn-nvoz" title="Crear una voz nueva">➕ Nueva</button>
+        <button class="btn btn-ghost btn-small btn-danger" id="btn-bvoz" title="Borrar la voz seleccionada">🗑</button>
+      </div>
+      <div class="vozstatus" id="vozstatus">Cargando voces…</div>
+
+      <div class="refinfo" id="refinfo">Cargando referencia…</div>
+
+      <label class="mdesc" style="display:block;margin-bottom:6px">Transcripción exacta de la muestra (de la voz activa):</label>
+      <textarea class="reftext" id="reftext" placeholder="Lo que dice la muestra de la voz activa…"></textarea>
+      <div style="margin-top:10px">
+        <button class="btn btn-ghost btn-small" id="btn-reftxt">💾 Guardar texto</button>
+        <span class="geninfo" id="refsavestatus" style="display:inline;margin-left:8px"></span>
+      </div>
+
+      <hr class="sep">
+
+      <label class="mdesc" style="display:block;margin-bottom:6px">O cambia la muestra de la voz activa (WAV):</label>
+      <div class="filebtn">
+        <input type="file" id="reffile" accept=".wav,audio/wav">
+        <button class="btn btn-ghost btn-small" id="btn-refaudio">⬆ Subir muestra</button>
+      </div>
+      <div class="geninfo" id="refaudstatus"></div>
+
+      <div class="hint">
+        💡 <b>CosyVoice 3</b> usa la voz activa al instante — cambia de voz y genera sin esperar.<br>
+        💡 La muestra ideal: 3-12 s de voz clara, sin ruido, y el texto debe ser <b>exactamente</b> lo que se oye.<br>
+        💡 Si cambias la referencia, <b>reinicia F5-TTS</b> para que la coja (la carga al arrancar).
+      </div>
+    </section>
+  </div>
+
+  <footer>Estudio de Voz TTS · JARVIS</footer>
+</div>
+
+<!-- modal nueva voz -->
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <h3>➕ Nueva voz</h3>
+    <label>Nombre de la voz</label>
+    <input type="text" id="nv-nombre" maxlength="40" placeholder="Ej: Marta, Narrador, Voz grave…">
+    <label>Transcripción exacta de la muestra (lo que se oye)</label>
+    <textarea id="nv-texto" placeholder="Escribe aquí lo que dice el audio…"></textarea>
+    <label>Muestra de voz (WAV, 3-12 s ideal)</label>
+    <input type="file" id="nv-file" accept=".wav,audio/wav">
+    <div class="modal-btns">
+      <button class="btn btn-ghost btn-small" id="nv-cancel">Cancelar</button>
+      <button class="btn btn-primary btn-small" id="nv-ok">Crear y activar</button>
+    </div>
+  </div>
+</div>
+
+<!-- modal confirmar borrado -->
+<div class="modal" id="modal-del">
+  <div class="modal-card">
+    <h3>🗑 Borrar voz</h3>
+    <p id="del-text" style="font-size:14px;line-height:1.5;color:var(--text)">¿Seguro…?</p>
+    <p class="hint" id="del-hint" style="margin-top:8px">No se puede deshacer. Si es la única voz no se puede borrar: te quedarías sin voz.</p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost btn-small" id="del-cancel">Cancelar</button>
+      <button class="btn btn-small" id="del-ok" style="background:var(--red);color:#fff">Sí, borrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+
+/* ---------- estado de modelos ---------- */
+function setDot(elId, on){
+  const el = $(elId); el.className = "dot " + (on ? "on" : "off");
+  return on;
+}
+async function refreshHealth(){
+  try{
+    const r = await fetch("/api/studio/health");
+    const h = await r.json();
+    setDot("s-cv3", h.cv3);    setDot("s-f5", h.f5);    setDot("s-alvaro", h.alvaro);
+    setDot("p-cv3", h.cv3);    setDot("p-f5", h.f5);    setDot("p-alvaro", h.alvaro);
+    $("pt-cv3").textContent = h.cv3 ? "en línea" : "apagado";
+    $("pt-f5").textContent = h.f5 ? "en línea" : "apagado";
+    $("pt-alvaro").textContent = h.alvaro ? "instalado" : "no instalado";
+  }catch(e){ /* servidor web caído */ }
+}
+
+/* ---------- selección de modelo ---------- */
+document.querySelectorAll(".model input").forEach(inp => {
+  inp.addEventListener("change", () => {
+    document.querySelectorAll(".model").forEach(m => m.classList.remove("selected"));
+    inp.closest(".model").classList.add("selected");
+  });
+});
+
+/* ---------- contador + velocidad ---------- */
+$("txt").addEventListener("input", () => $("cnt").textContent = $("txt").value.length);
+$("speed").addEventListener("input", () => $("speedval").textContent = parseFloat($("speed").value).toFixed(2) + "×");
+
+/* ---------- mensajes ---------- */
+function msg(html, kind){
+  const m = $("msg");
+  m.className = "msg show " + (kind || "");
+  m.innerHTML = html;
+}
+function clearMsg(){ $("msg").className = "msg"; }
+
+/* ---------- generar ---------- */
+$("btn-gen").addEventListener("click", async () => {
+  const text = $("txt").value.trim();
+  if(!text){ msg("✏️ Escribe primero el texto a generar.", "err"); return; }
+  const model = document.querySelector('input[name="model"]:checked').value;
+  const speed = parseFloat($("speed").value);
+  clearMsg();
+  $("result").classList.remove("show");
+  msg('<span class="spinner"></span>Generando con ' +
+      ({cv3:"CosyVoice 3", f5:"F5-TTS", alvaro:"Álvaro"})[model] + "… puede tardar unos segundos.", "wait");
+  $("btn-gen").disabled = true;
+  try{
+    const resp = await fetch("/api/studio/tts", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({text, model, speed})
+    });
+    if(!resp.ok){
+      let detail = "Error " + resp.status;
+      try{ const j = await resp.json(); detail = j.detail || detail; }catch(_){}
+      msg("❌ " + detail, "err");
+      return;
+    }
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const p = $("player");
+    p.src = url;
+    p.play().catch(()=>{});
+    const ext = model === "alvaro" ? "mp3" : "wav";
+    const dl = $("dl");
+    dl.href = url;
+    dl.download = "voz_" + model + "." + ext;
+    $("geninfo").textContent = "✅ " + text.length + " caracteres · modelo " + model +
+      " · " + (blob.size/1024).toFixed(0) + " KB · velocidad " + speed.toFixed(2) + "×";
+    $("result").classList.add("show");
+    clearMsg();
+  }catch(e){
+    msg("❌ Error de conexión: " + e.message, "err");
+  }finally{
+    $("btn-gen").disabled = false;
+  }
+});
+
+/* ---------- voces: cargar lista ---------- */
+async function loadVoces(){
+  try{
+    const r = await fetch("/api/studio/voces");
+    if(!r.ok){
+      let d = "Error " + r.status;
+      try{ const j = await r.json(); d = j.detail || d; }catch(_){}
+      throw new Error(d);
+    }
+    const j = await r.json();
+    const voces = j.voces || [];
+    const sel = $("vozsel");
+    sel.innerHTML = "";
+    voces.forEach(v => {
+      const o = document.createElement("option");
+      o.value = v.nombre;
+      const dur = v.sample && v.sample.duration_s != null ? v.sample.duration_s + " s" : "sin muestra";
+      o.textContent = v.nombre + " · " + dur;
+      sel.appendChild(o);
+    });
+    if(voces.length === 0){
+      sel.innerHTML = "<option>—</option>";
+      $("vozstatus").textContent = "No hay voces todavía. Pulsa ➕ Nueva.";
+      $("refinfo").textContent = "Sin voces guardadas.";
+      $("btn-bvoz").disabled = true;
+      return;
+    }
+    const idx = voces.findIndex(v => v.slug === j.activa);
+    if(idx >= 0) sel.selectedIndex = idx;
+    $("btn-bvoz").disabled = voces.length <= 1;
+    $("vozstatus").textContent = voces.length + (voces.length === 1 ? " voz guardada" : " voces guardadas") +
+      " en tu PC · la activa se usa al instante";
+    loadRef();
+  }catch(e){
+    $("vozstatus").textContent = "⚠️ " + e.message;
+    $("vozsel").innerHTML = "<option>—</option>";
+    $("btn-bvoz").disabled = true;
+    $("refinfo").textContent = "No se pudo leer las voces. ¿Has actualizado el servidor CosyVoice en el PC?";
+    loadRef(); /* la referencia simple sigue funcionando aunque falle la lista */
+  }
+}
+
+/* ---------- voces: cambiar activa ---------- */
+$("vozsel").addEventListener("change", async () => {
+  const nombre = $("vozsel").value;
+  if(!nombre || nombre === "—") return;
+  $("vozstatus").textContent = "Activando " + nombre + "…";
+  try{
+    const r = await fetch("/api/studio/voces/activar", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({nombre})
+    });
+    const j = await r.json();
+    if(r.ok){
+      $("vozstatus").textContent = "✅ Voz activa: " + nombre;
+      loadRef();
+    }else{
+      $("vozstatus").textContent = "❌ " + (j.detail || "error");
+    }
+  }catch(e){
+    $("vozstatus").textContent = "❌ " + e.message;
+  }
+});
+
+/* ---------- voces: nueva ---------- */
+$("btn-nvoz").addEventListener("click", () => {
+  $("nv-nombre").value = ""; $("nv-texto").value = ""; $("nv-file").value = "";
+  $("modal").classList.add("show");
+  $("nv-nombre").focus();
+});
+$("nv-cancel").addEventListener("click", () => $("modal").classList.remove("show"));
+$("modal").addEventListener("click", e => { if(e.target === $("modal")) $("modal").classList.remove("show"); });
+
+$("nv-ok").addEventListener("click", async () => {
+  const nombre = $("nv-nombre").value.trim();
+  if(!nombre){ alert("Ponle un nombre a la voz."); return; }
+  const texto = $("nv-texto").value.trim();
+  let wav_base64 = "";
+  const f = $("nv-file").files[0];
+  if(f){
+    const buf = await f.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let bin = "";
+    const CH = 0x8000;
+    for(let i = 0; i < bytes.length; i += CH){
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
+    }
+    wav_base64 = btoa(bin);
+  }
+  $("nv-ok").disabled = true;
+  $("vozstatus").textContent = "Creando «" + nombre + "»…";
+  try{
+    const r = await fetch("/api/studio/voces", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({nombre, texto, wav_base64})
+    });
+    const j = await r.json();
+    if(r.ok){
+      $("modal").classList.remove("show");
+      $("vozstatus").textContent = "✅ Voz creada: " + nombre + " (activándola…)";
+      await fetch("/api/studio/voces/activar", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({nombre})
+      });
+      loadVoces();
+    }else{
+      $("vozstatus").textContent = "❌ " + (j.detail || "error");
+    }
+  }catch(e){
+    $("vozstatus").textContent = "❌ " + e.message;
+  }finally{
+    $("nv-ok").disabled = false;
+  }
+});
+
+/* ---------- voces: borrar (con confirmación) ---------- */
+let _vozABorrar = null;
+$("btn-bvoz").addEventListener("click", () => {
+  const nombre = $("vozsel").value;
+  if(!nombre || nombre === "—") return;
+  if(vocesList.length <= 1){
+    $("vozstatus").textContent = "⚠️ No puedes borrar la única voz: te quedarías sin voz.";
+    return;
+  }
+  _vozABorrar = nombre;
+  $("del-text").textContent = "¿Seguro que quieres borrar la voz «" + nombre + "»?";
+  $("modal-del").classList.add("show");
+});
+$("del-cancel").addEventListener("click", () => $("modal-del").classList.remove("show"));
+$("modal-del").addEventListener("click", e => { if(e.target === $("modal-del")) $("modal-del").classList.remove("show"); });
+$("del-ok").addEventListener("click", async () => {
+  const nombre = _vozABorrar;
+  if(!nombre) return;
+  $("del-ok").disabled = true;
+  try{
+    const r = await fetch("/api/studio/voces/" + encodeURIComponent(nombre), {method: "DELETE"});
+    const j = await r.json();
+    $("modal-del").classList.remove("show");
+    $("vozstatus").textContent = r.ok ? "🗑 Borrada: " + nombre : "❌ " + (j.detail || "error");
+    _vozABorrar = null;
+    loadVoces();
+  }catch(e){
+    $("vozstatus").textContent = "❌ " + e.message;
+  }finally{
+    $("del-ok").disabled = false;
+  }
+});
+
+/* ---------- referencia: cargar (voz activa) ---------- */
+async function loadRef(){
+  try{
+    const r = await fetch("/api/studio/ref");
+    const j = await r.json();
+    $("reftext").value = j.ref_text || "";
+    const nombre = j.voz || $("vozsel").value || "la voz activa";
+    if(j.sample){
+      $("refinfo").innerHTML = "🎵 Muestra de <b>" + nombre + "</b>: " +
+        (j.sample.duration_s != null ? j.sample.duration_s + " s" : "duración desconocida");
+    }else{
+      $("refinfo").innerHTML = "⚠️ <b>" + nombre + "</b> no tiene muestra todavía — súbela abajo.";
+    }
+  }catch(e){
+    $("refinfo").textContent = "No se pudo leer la referencia.";
+  }
+}
+
+/* ---------- referencia: guardar texto ---------- */
+$("btn-reftxt").addEventListener("click", async () => {
+  const text = $("reftext").value.trim();
+  if(!text){ $("refsavestatus").textContent = "vacío"; return; }
+  $("btn-reftxt").disabled = true;
+  $("refsavestatus").textContent = "guardando…";
+  try{
+    const r = await fetch("/api/studio/ref/text", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({text})
+    });
+    const j = await r.json();
+    $("refsavestatus").textContent = r.ok ? "✅ guardado" : "❌ " + (j.detail || "error");
+  }catch(e){
+    $("refsavestatus").textContent = "❌ " + e.message;
+  }finally{
+    $("btn-reftxt").disabled = false;
+  }
+});
+
+/* ---------- referencia: subir audio ---------- */
+$("btn-refaudio").addEventListener("click", async () => {
+  const f = $("reffile").files[0];
+  if(!f){ $("refaudstatus").textContent = "elige un WAV primero"; return; }
+  const fd = await f.arrayBuffer();
+  $("btn-refaudio").disabled = true;
+  $("refaudstatus").textContent = "subiendo…";
+  try{
+    const r = await fetch("/api/studio/ref/audio", {
+      method: "POST",
+      headers: {"Content-Type": "application/octet-stream"},
+      body: fd
+    });
+    const j = await r.json();
+    $("refaudstatus").textContent = r.ok
+      ? "✅ Guardada en «" + (j.voz || "la voz activa") + "» (" + (j.duration_s != null ? j.duration_s + " s" : "ok") + ")"
+      : "❌ " + (j.detail || "error");
+    loadRef();
+    loadVoces();
+  }catch(e){
+    $("refaudstatus").textContent = "❌ " + e.message;
+  }finally{
+    $("btn-refaudio").disabled = false;
+  }
+});
+
+/* ---------- init ---------- */
+refreshHealth();
+setInterval(refreshHealth, 15000);
+loadVoces();
+</script>
+</body>
+</html>

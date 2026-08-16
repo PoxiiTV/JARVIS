@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>J.A.R.V.I.S. — Configuración</title>
+<style>
+  :root {
+    --cian: #5eeaff;
+    --tenue: #2e96be;
+    --apagado: rgba(168, 230, 255, .55);
+    --linea: rgba(0, 212, 255, .22);
+    --fondo-caja: rgba(0, 20, 34, .55);
+    --ok: #00ffb3;
+    --mal: #ff6b6b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: radial-gradient(ellipse at 50% 0%, #0b1420 0%, #050810 68%);
+    color: #d9f6ff;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    display: flex; flex-direction: column;
+    height: 100vh; overflow: hidden;
+    user-select: none;
+  }
+
+  /* ---------- cabecera: pasos ---------- */
+  header { padding: 26px 40px 0; flex-shrink: 0; }
+  .marca {
+    font-size: 15px; font-weight: 300; letter-spacing: .3em;
+    color: var(--cian); text-align: center;
+    text-shadow: 0 0 18px rgba(94, 234, 255, .45);
+  }
+  .pasos {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; margin-top: 20px;
+  }
+  .pip {
+    width: 34px; height: 3px; border-radius: 2px;
+    background: rgba(94, 234, 255, .15);
+    transition: background .35s ease, box-shadow .35s ease;
+  }
+  .pip.hecho { background: var(--tenue); }
+  .pip.activo {
+    background: var(--cian);
+    box-shadow: 0 0 10px rgba(94, 234, 255, .7);
+  }
+
+  /* ---------- cuerpo ---------- */
+  main {
+    flex: 1; overflow-y: auto;
+    padding: 28px 40px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  main::-webkit-scrollbar { width: 7px; }
+  main::-webkit-scrollbar-thumb {
+    background: rgba(0, 212, 255, .2); border-radius: 4px;
+  }
+
+  .pantalla { display: none; width: 100%; max-width: 620px; }
+  .pantalla.visible { display: block; animation: entrar .38s ease both; }
+  @keyframes entrar {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  h1 {
+    font-size: 25px; font-weight: 300; letter-spacing: .05em;
+    margin-bottom: 10px;
+  }
+  h1 .acento { color: var(--cian); }
+  .sub {
+    font-size: 13px; line-height: 1.65; color: var(--apagado);
+    margin-bottom: 24px;
+  }
+  .sub b { color: #9fe4ff; font-weight: 600; }
+
+  /* ---------- campos ---------- */
+  .campo { margin-bottom: 18px; }
+  .campo > label {
+    display: block; font-size: 11px; letter-spacing: .06em;
+    color: #9fe4ff; margin-bottom: 5px; font-weight: 600;
+  }
+  .campo .porque {
+    font-size: 11.5px; line-height: 1.55; color: var(--apagado);
+    margin-bottom: 8px;
+  }
+  .campo .porque a { color: var(--cian); text-decoration: none; }
+  .campo .porque a:hover { text-decoration: underline; }
+  input[type=text], input[type=password], select {
+    width: 100%; padding: 10px 12px; border-radius: 8px;
+    border: 1px solid var(--linea); background: rgba(0, 10, 18, .8);
+    color: #d9f6ff; font-size: 12.5px; font-family: Consolas, monospace;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  input:focus, select:focus {
+    outline: none; border-color: rgba(0, 212, 255, .65);
+    box-shadow: 0 0 12px rgba(0, 212, 255, .25);
+  }
+  input::placeholder { color: rgba(120, 180, 210, .38); }
+  .fila { display: flex; gap: 12px; }
+  .fila .campo { flex: 1; }
+
+  .etiqueta-op {
+    font-size: 9.5px; letter-spacing: .1em; padding: 2px 6px;
+    border-radius: 4px; margin-left: 7px; vertical-align: middle;
+    background: rgba(94, 234, 255, .1); color: var(--tenue);
+  }
+  .etiqueta-op.necesaria {
+    background: rgba(255, 107, 107, .13); color: #ff9b9b;
+  }
+
+  /* ---------- caja de aviso / resultado ---------- */
+  .caja {
+    border: 1px solid var(--linea); border-radius: 10px;
+    background: var(--fondo-caja); padding: 14px 16px;
+    font-size: 12px; line-height: 1.6; color: var(--apagado);
+    margin-bottom: 18px;
+  }
+  .caja b { color: #9fe4ff; }
+  .aviso { min-height: 1.4em; font-size: 11.5px; line-height: 1.5; margin-top: 4px; }
+  .aviso.ok { color: var(--ok); }
+  .aviso.mal { color: var(--mal); }
+  .aviso.trabajando { color: var(--apagado); }
+
+  /* ---------- voz ---------- */
+  .voces { display: flex; flex-direction: column; gap: 9px; margin-bottom: 16px; }
+  .voz {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: 9px; cursor: pointer;
+    border: 1px solid var(--linea); background: var(--fondo-caja);
+    transition: border-color .2s ease, background .2s ease;
+  }
+  .voz:hover { border-color: rgba(0, 212, 255, .45); }
+  .voz.elegida {
+    border-color: var(--cian); background: rgba(0, 40, 60, .6);
+    box-shadow: 0 0 14px rgba(0, 212, 255, .18);
+  }
+  .voz input { accent-color: var(--cian); flex-shrink: 0; }
+  .voz .txt { flex: 1; }
+  .voz .txt b { display: block; font-size: 12.5px; color: #d9f6ff; }
+  .voz .txt small { font-size: 11px; color: var(--apagado); line-height: 1.5; }
+
+  /* ---------- botones ---------- */
+  .btn {
+    padding: 11px 22px; border-radius: 8px; cursor: pointer;
+    border: 1px solid rgba(0, 212, 255, .38);
+    background: rgba(0, 25, 40, .8); color: var(--cian);
+    font-size: 12px; letter-spacing: .12em; font-family: Consolas, monospace;
+    transition: background .2s ease, box-shadow .2s ease, transform .12s ease;
+  }
+  .btn:hover:not(:disabled) {
+    background: rgba(0, 212, 255, .16);
+    box-shadow: 0 0 16px rgba(0, 212, 255, .35);
+    transform: translateY(-1px);
+  }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .btn.principal {
+    background: rgba(0, 212, 255, .16); border-color: var(--cian);
+    color: #eafcff; font-weight: 600;
+  }
+  .btn.fantasma {
+    border-color: rgba(94, 234, 255, .18); color: var(--apagado);
+  }
+  .btn.pequeno { padding: 8px 14px; font-size: 11px; }
+
+  footer {
+    flex-shrink: 0; padding: 18px 40px 26px;
+    display: flex; align-items: center; gap: 12px;
+    border-top: 1px solid rgba(0, 212, 255, .1);
+  }
+  footer .hueco { flex: 1; }
+  .saltar {
+    font-size: 11px; color: rgba(120, 180, 210, .5);
+    cursor: pointer; text-decoration: underline;
+  }
+  .saltar:hover { color: var(--apagado); }
+
+  /* ---------- instalación ---------- */
+  .barra {
+    height: 4px; border-radius: 3px; overflow: hidden;
+    background: rgba(94, 234, 255, .12); margin: 6px 0 10px;
+  }
+  .relleno {
+    height: 100%; width: 0;
+    background: linear-gradient(90deg, var(--tenue), var(--cian));
+    box-shadow: 0 0 12px rgba(94, 234, 255, .55);
+    transition: width .45s ease;
+  }
+  /* Sin porcentaje fiable: barra indeterminada, nunca un número inventado */
+  .barra.sin-saber .relleno {
+    width: 34%; animation: vaiven 1.5s ease-in-out infinite;
+  }
+  @keyframes vaiven {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(320%); }
+  }
+  .tarea {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12.5px; padding: 7px 0; color: var(--apagado);
+  }
+  .tarea .icono { width: 15px; text-align: center; flex-shrink: 0; }
+  .tarea.activa { color: #d9f6ff; }
+  .tarea.lista { color: var(--ok); }
+  .tarea.fallo { color: var(--mal); }
+  /* Consola: alto en múltiplos exactos de línea (6 × 18px) para que no se
+     corten caracteres por arriba ni por abajo. El padding va en las líneas,
+     no en el contenedor, o el cálculo se descuadra. */
+  #consola {
+    --lineas: 6;
+    --alto-linea: 18px;
+    margin-top: 12px; padding: 8px 0; border-radius: 8px;
+    background: rgba(0, 8, 14, .75); border: 1px solid rgba(0, 212, 255, .12);
+    font-family: Consolas, monospace; font-size: 10.5px;
+    color: #2b6f8f;
+    height: calc(var(--lineas) * var(--alto-linea) + 16px);
+    overflow: hidden;
+    display: flex; flex-direction: column-reverse;
+    justify-content: flex-start;
+  }
+  #consola div {
+    height: var(--alto-linea); line-height: var(--alto-linea);
+    padding: 0 12px; flex-shrink: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* La más reciente, resaltada: se ve de un vistazo qué está pasando ahora */
+  #consola div:first-child { color: #58a8c8; }
+  #consola:empty::before {
+    content: 'Esperando…'; padding: 0 12px;
+    line-height: var(--alto-linea); color: #1e4c63;
+  }
+
+  /* ---------- final ---------- */
+  .final { text-align: center; }
+  .final .reactor {
+    width: 96px; height: 96px; margin: 4px auto 20px; position: relative;
+  }
+  .final .aro {
+    position: absolute; inset: 0; border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: var(--cian); border-right-color: var(--cian);
+    animation: giro 3s linear infinite;
+  }
+  .final .aro:nth-child(2) {
+    inset: 16px; border-color: transparent;
+    border-bottom-color: var(--tenue); border-left-color: var(--tenue);
+    animation-duration: 4.5s; animation-direction: reverse;
+  }
+  .final .nucleo {
+    position: absolute; inset: 32px; border-radius: 50%;
+    background: radial-gradient(circle, #eafcff 0%, var(--cian) 58%, transparent 80%);
+    animation: latido 2.2s ease-in-out infinite;
+  }
+  @keyframes giro { to { transform: rotate(360deg); } }
+  @keyframes latido {
+    0%, 100% { opacity: .6; transform: scale(.93); }
+    50%      { opacity: 1;  transform: scale(1.05); }
+  }
+
+  .futuro {
+    text-align: left; border-radius: 10px; padding: 16px 18px;
+    border: 1px solid rgba(94, 234, 255, .16);
+    background: linear-gradient(160deg, rgba(0, 30, 48, .55), rgba(0, 14, 24, .3));
+    margin: 24px 0 6px;
+  }
+  .futuro h3 {
+    font-size: 13px; font-weight: 600; color: #9fe4ff;
+    letter-spacing: .04em; margin-bottom: 9px;
+  }
+  .futuro p { font-size: 12px; line-height: 1.65; color: var(--apagado); }
+  .futuro p b { color: var(--cian); }
+  .futuro ul { list-style: none; margin: 11px 0; }
+  .futuro li {
+    font-size: 12px; line-height: 1.9; color: var(--apagado);
+  }
+  .futuro .lema {
+    margin-top: 12px; padding-top: 11px;
+    border-top: 1px solid rgba(94, 234, 255, .12);
+    font-size: 12.5px; font-style: italic; color: #9fe4ff; text-align: center;
+  }
+
+  #confeti {
+    position: fixed; inset: 0; pointer-events: none;
+    z-index: 99; display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .aro, .nucleo, .barra.sin-saber .relleno { animation: none; }
+    .pantalla.visible { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="marca">J.A.R.V.I.S.</div>
+  <div class="pasos" id="pasos"></div>
+</header>
+
+<main>
+  <!-- ============ 1. bienvenida ============ -->
+  <section class="pantalla visible" data-paso="0">
+    <h1>Bienvenido, <span class="acento">señor</span>.</h1>
+    <p class="sub">
+      Antes de empezar hay que configurar unas cuantas cosas. Son
+      <b>tres pasos</b> y se tarda un par de minutos.
+    </p>
+    <div class="caja">
+      Vamos a ver:<br>
+      &nbsp;&nbsp;<b>1.</b> Las claves que necesita para pensar y ver.<br>
+      &nbsp;&nbsp;<b>2.</b> Qué voz quieres que tenga.<br>
+      &nbsp;&nbsp;<b>3.</b> La instalación de todo lo que hace falta.<br><br>
+      Todo esto se puede cambiar luego desde <b>Ajustes</b>.
+    </div>
+  </section>
+
+  <!-- ============ 2. claves ============ -->
+  <section class="pantalla" data-paso="1">
+    <h1>Claves de <span class="acento">acceso</span></h1>
+    <p class="sub">
+      JARVIS necesita una clave para pensar. Las demás son opcionales:
+      sin ellas funciona igual, solo que con menos funciones.
+    </p>
+
+    <div class="campo">
+      <label for="k-cerebro">
+        Cerebro <span class="etiqueta-op necesaria">NECESARIA</span>
+      </label>
+      <p class="porque">
+        Es lo que le permite entender y responder. Se saca gratis en
+        <a href="#" data-abrir="https://openrouter.ai/keys">openrouter.ai/keys</a>
+        — la misma clave sirve también para la vista.
+      </p>
+      <input type="password" id="k-cerebro" placeholder="sk-or-v1-…" autocomplete="off" spellcheck="false">
+      <div class="aviso" id="av-cerebro"></div>
+    </div>
+
+    <div class="campo">
+      <label for="k-vision">Vista <span class="etiqueta-op">OPCIONAL</span></label>
+      <p class="porque">
+        Para que describa lo que ve por la cámara. Si lo dejas vacío, se usa
+        la misma clave del cerebro.
+      </p>
+      <input type="password" id="k-vision" placeholder="se usa la del cerebro" autocomplete="off" spellcheck="false">
+    </div>
+
+    <div class="fila">
+      <div class="campo">
+        <label for="k-lat">Latitud</label>
+        <p class="porque">Para el tiempo (tu ciudad).</p>
+        <input type="text" id="k-lat" value="40.4168" placeholder="latitud">
+      </div>
+      <div class="campo">
+        <label for="k-lon">Longitud</label>
+        <p class="porque">Open-Meteo.</p>
+        <input type="text" id="k-lon" value="-3.7038" placeholder="longitud">
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3. voz ============ -->
+  <section class="pantalla" data-paso="2">
+    <h1>Su <span class="acento">voz</span></h1>
+    <p class="sub">
+      Elige cómo quieres que suene. Puedes cambiarlo cuando quieras desde
+      Ajustes.
+    </p>
+
+    <div class="voces" id="voces"></div>
+
+    <div class="campo" id="caja-propia" style="display:none">
+      <label for="voz-id">Identificador de la voz</label>
+      <p class="porque">
+        Busca una voz en
+        <a href="#" data-abrir="https://fish.audio/discovery">fish.audio</a>
+        (o clona la tuya) y pega aquí su id: lo verás al final de la
+        dirección de la voz.
+      </p>
+      <input type="text" id="voz-id" placeholder="5bb94403e2a44a0fb0ae2829e97cdeda"
+             autocomplete="off" spellcheck="false">
+    </div>
+
+    <div class="caja">
+      La voz se genera en la nube con <b>Fish Audio</b>: responde en menos de
+      un segundo y no hay que descargar nada ni tener tarjeta gráfica.
+      Eso sí, <b>necesita conexión a internet</b>.
+    </div>
+
+    <button class="btn pequeno" id="btn-probar-voz">🔊 Probar esta voz</button>
+    <div class="aviso" id="av-voz"></div>
+  </section>
+
+  <!-- ============ 4. instalación ============ -->
+  <section class="pantalla" data-paso="3">
+    <h1>Preparando el <span class="acento">sistema</span></h1>
+    <p class="sub" id="sub-instalar">
+      Descargando lo necesario. Puede tardar entre 5 y 20 minutos según tu
+      conexión. <b>No cierres la ventana.</b>
+    </p>
+
+    <div class="barra" id="barra"><div class="relleno" id="relleno"></div></div>
+    <div id="tareas"></div>
+    <div id="consola"></div>
+  </section>
+
+  <!-- ============ 5. listo ============ -->
+  <section class="pantalla final" data-paso="4">
+    <div class="reactor">
+      <div class="aro"></div><div class="aro"></div><div class="nucleo"></div>
+    </div>
+    <h1>¡Jarvis está <span class="acento">listo</span>!</h1>
+    <p class="sub">Todo está configurado. Ya puedes empezar a utilizar tu asistente.</p>
+
+    <div class="futuro">
+      <h3>🚀 Esto es solo el principio</h3>
+      <p>
+        Más adelante, Jarvis evolucionará todavía más con <b>OpenClaw</b>,
+        permitiéndole ser mucho más inteligente y capaz de realizar acciones
+        por sí mismo.
+      </p>
+      <p style="margin-top:9px">Por ejemplo:</p>
+      <ul>
+        <li>📁 Trabajar con archivos y carpetas.</li>
+        <li>🌐 Interactuar con aplicaciones y servicios.</li>
+        <li>🔎 Buscar información y realizar tareas automáticamente.</li>
+        <li>💻 Ejecutar acciones en el ordenador.</li>
+        <li>⚙️ Automatizar tareas que normalmente tendrías que hacer tú manualmente.</li>
+      </ul>
+      <div class="lema">"Hoy configuras Jarvis. Mañana Jarvis hará mucho más."</div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span class="saltar" id="saltar">Configurar más tarde</span>
+  <div class="hueco"></div>
+  <button class="btn fantasma" id="btn-atras" style="display:none">ATRÁS</button>
+  <button class="btn principal" id="btn-siguiente">EMPEZAR</button>
+</footer>
+
+<canvas id="confeti"></canvas>
+
+<script src="tutorial.js"></script>
+</body>
+</html>

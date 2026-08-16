@@ -1,0 +1,14 @@
+# Excluir basura del contexto de build
+venv/
+__pycache__/
+*.pyc
+dashboard.log
+tunnel.log
+tunnel_url.txt
+.dashboard_env
+prototype/
+tts-pc-server/
+NOTES.md
+README.md
+run_test.sh
+.git/
