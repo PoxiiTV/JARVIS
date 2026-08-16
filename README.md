@@ -457,4 +457,4 @@ Python **3.10–3.12** on PATH. Copy `.env.example` → `.env`: `DEEPSEEK_API_KE
 
 `CEREBRO=auto`: greetings → DeepSeek; files/shell/browser/ping → Hermes; Spotify/Tuya → this PC. `HERMES_FALLBACK=0` → “Hermes apagado” if the gateway is down.
 
-Never commit `.env`. Do not expose the gateway to the internet. Offline tests: `tests\run_iron.bat`.
+Never commit `.env`. Do not expose the gateway to the internet. Offline tests: `tests\run_iron.bat`. .
