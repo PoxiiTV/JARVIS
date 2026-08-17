@@ -10,7 +10,7 @@
 ![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square&logo=windows&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.10--3.12-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Electron](https://img.shields.io/badge/Electron-33-47848F?style=flat-square&logo=electron&logoColor=white)
-![Licencia](https://img.shields.io/badge/Uso-Personal-5eeaff?style=flat-square)
+[![Licencia](https://img.shields.io/badge/Uso-Personal-5eeaff?style=flat-square)](LICENSE)
 
 <br/>
 
@@ -457,4 +457,16 @@ Python **3.10–3.12** on PATH. Copy `.env.example` → `.env`: `DEEPSEEK_API_KE
 
 `CEREBRO=auto`: greetings → DeepSeek; files/shell/browser/ping → Hermes; Spotify/Tuya → this PC. `HERMES_FALLBACK=0` → “Hermes apagado” if the gateway is down.
 
-Never commit `.env`. Do not expose the gateway to the internet. Offline tests: `tests\run_iron.bat`. .
+Never commit `.env`. Do not expose the gateway to the internet. Offline tests: `tests\\run_iron.bat`. .
+
+---
+
+## 📜 Licencia / License
+
+**J.A.R.V.I.S.** se distribuye bajo la **PolyForm Noncommercial License 1.0.0** 🔒.
+
+Libre para **uso personal**: tu mayordomo de escritorio, aprender y experimentar. Prohibido el **uso comercial** — no se puede vender ni obtener beneficio económico con este proyecto.
+
+> Uso personal, como debe ser. 🖤
+
+📄 Texto completo en [`LICENSE`](LICENSE).
